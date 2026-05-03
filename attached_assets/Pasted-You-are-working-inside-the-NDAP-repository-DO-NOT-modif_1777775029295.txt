@@ -1,0 +1,211 @@
+You are working inside the NDAP repository.
+
+DO NOT modify any implementation, simulator, or consensus logic.
+
+THIS IS THE FINAL CLOSURE PHASE.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Transform NDAP into a fully self-contained, versioned, RFC-style protocol specification that enables independent reimplementation.
+
+This is the final documentation and protocol definition stage.
+
+------------------------------------------------------------
+OUTPUT TARGET
+------------------------------------------------------------
+
+Create:
+
+/docs/RFC/NDAP_RFC_v1.0.md
+
+This document becomes the canonical protocol definition.
+
+------------------------------------------------------------
+SECTION 1 — PROTOCOL IDENTIFICATION
+
+Define:
+- Protocol Name: NDAP
+- Version: v1.0
+- Status: SPECIFICATION COMPLETE
+- Stability: CANONICAL REFERENCE IMPLEMENTATION EXISTS
+
+------------------------------------------------------------
+SECTION 2 — ABSTRACT
+
+Explain:
+- what NDAP is
+- what problem it solves (Byzantine consensus + verifiable distributed state)
+- why it exists beyond traditional BFT systems
+
+------------------------------------------------------------
+SECTION 3 — PROTOCOL GOALS
+
+Define explicitly:
+- safety under Byzantine faults
+- deterministic state replication
+- verifiable consensus finality
+- trace-based auditability
+
+------------------------------------------------------------
+SECTION 4 — SYSTEM MODEL
+
+Define:
+
+Nodes:
+- honest nodes
+- Byzantine nodes (≤ 1/3 assumption)
+
+Network:
+- asynchronous
+- unreliable
+- adversarial scheduler
+
+Cryptography:
+- Ed25519 signatures
+- SHA-256 hashing
+
+------------------------------------------------------------
+SECTION 5 — STATE MODEL (CORE)
+
+Define canonical state:
+
+State = {
+  height,
+  view,
+  validatorSet,
+  smtRoot,
+  mmrRoot,
+  phase,
+  finalizedRoot
+}
+
+Must include:
+- formal explanation of each field
+- invariants tied to each field
+
+------------------------------------------------------------
+SECTION 6 — STATE TRANSITION RULES
+
+Define full transition system:
+
+PROPOSE
+PREVOTE
+PRECOMMIT
+FINALIZE
+TIMEOUT
+VIEW_CHANGE
+
+Each transition must include:
+- preconditions
+- required quorum conditions
+- resulting state mutation rules
+
+------------------------------------------------------------
+SECTION 7 — CONSENSUS RULES
+
+Define:
+- 2/3 weighted quorum rule
+- leader selection rule
+- view change logic
+- finality conditions
+
+Must be unambiguous and implementation-independent.
+
+------------------------------------------------------------
+SECTION 8 — ADVERSARY MODEL
+
+Define formally:
+
+Adversary can:
+- delay messages
+- reorder messages
+- drop messages
+- inject invalid messages
+
+Adversary cannot:
+- forge signatures
+- exceed cryptographic assumptions
+
+Include:
+- probabilistic scheduler model definition
+
+------------------------------------------------------------
+SECTION 9 — INVARIANTS
+
+Define mathematically:
+
+Safety:
+no two conflicting finalized states at same height
+
+Liveness:
+eventual finalization under honest majority
+
+Determinism:
+identical input trace → identical final state
+
+Quorum correctness:
+finalization only under ≥ 2/3 weighted votes
+
+------------------------------------------------------------
+SECTION 10 — TRACE MODEL
+
+Define:
+
+Trace = ordered list of:
+- event
+- stateBefore
+- stateAfter
+- signatures
+
+Must be:
+- deterministic
+- replayable
+- verifiable
+
+------------------------------------------------------------
+SECTION 11 — IMPLEMENTATION MAPPING
+
+Map spec → code:
+
+- state machine → BFT engine
+- SMT/MMR → state storage layer
+- network layer → gossip system
+- simulator → adversarial environment
+- verifier → invariant checker
+
+Important:
+explicitly state that implementation is reference only.
+
+------------------------------------------------------------
+SECTION 12 — LIMITATIONS
+
+Clearly state:
+
+- not formally verified
+- simulation-based validation only
+- adversarial model is bounded
+- real-world deployment requires additional auditing
+
+------------------------------------------------------------
+SECTION 13 — VERSIONING RULES
+
+Define:
+
+- changes must increment protocol version
+- breaking changes require new RFC version
+- behavior changes must preserve invariants or be explicitly versioned
+
+------------------------------------------------------------
+FINAL REQUIREMENT
+
+This document must:
+
+✔ be sufficient to independently implement NDAP
+✔ remove ambiguity in all core rules
+✔ separate spec from implementation completely
+✔ serve as canonical protocol reference
+
+------------------------------------------------------------
+END

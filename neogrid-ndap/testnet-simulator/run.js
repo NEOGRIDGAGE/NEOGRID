@@ -2,61 +2,70 @@
 'use strict';
 
 const { run: singleLeaderFailure } = require('./scenarios/singleLeaderFailure');
-const { run: networkPartition }    = require('./scenarios/networkPartition');
-const { run: equivocationAttack }  = require('./scenarios/equivocationAttack');
-const { run: delayedFinality }     = require('./scenarios/delayedFinality');
+const { run: networkPartition } = require('./scenarios/networkPartition');
+const { run: equivocationAttack } = require('./scenarios/equivocationAttack');
+const { run: delayedFinality } = require('./scenarios/delayedFinality');
+const { ModelChecker } = require('./formal/modelChecker');
+
+const runMode = process.env.RUN_MODE || 'small';
+const iterations = Number(process.env.ITERATIONS || (runMode === 'large' ? 20 : runMode === 'medium' ? 30 : 20));
+const nodeCount = Number(process.env.NODE_COUNT || (runMode === 'large' ? 100 : runMode === 'medium' ? 25 : 5));
 
 const scenarios = [
-  { name: 'Single Leader Failure',  fn: singleLeaderFailure },
-  { name: 'Network Partition',      fn: networkPartition    },
-  { name: 'Equivocation Attack',    fn: equivocationAttack  },
-  { name: 'Delayed Finality',       fn: delayedFinality     },
+  { name: 'Single Leader Failure', fn: singleLeaderFailure },
+  { name: 'Network Partition', fn: networkPartition },
+  { name: 'Equivocation Attack', fn: equivocationAttack },
+  { name: 'Delayed Finality', fn: delayedFinality },
 ];
 
-const PAD = 30;
-
-function bar(len = 60, ch = '─') { return ch.repeat(len); }
+function histogramSummary(hist) {
+  const keys = Object.keys(hist).map(Number).sort((a, b) => a - b);
+  return keys.map((k) => `${k * 100}-${k * 100 + 99}ms:${hist[k]}`).join(' | ');
+}
 
 async function main() {
-  console.log('\n' + bar(60, '═'));
-  console.log('  NDAP Byzantine Testnet Simulator');
-  console.log(bar(60, '═'));
-  console.log();
+  console.log(`\nNDAP Advanced Validation System v2`);
+  console.log(`runMode=${runMode} iterations=${iterations} nodeCount=${nodeCount}\n`);
 
-  const results  = [];
-  const overall  = { pass: 0, fail: 0 };
+  const modelChecker = new ModelChecker();
+  const results = [];
 
-  for (const { name, fn } of scenarios) {
-    process.stdout.write(`  Running: ${name.padEnd(PAD)} `);
-    let r;
-    try {
-      r = await fn();
-    } catch (err) {
-      r = { scenario: name, pass: false, detail: `UNCAUGHT: ${err.message}`, convergenceMs: null };
+  for (const scenario of scenarios) {
+    const result = await scenario.fn({ iterations, nodeCount, runMode });
+    const trace = result.worstCasePathTrace || [];
+    const model = modelChecker.simulate(Array.isArray(trace) ? trace : []);
+    results.push({ ...result, model });
+    console.log(`${result.pass ? 'PASS' : 'FAIL'} ${scenario.name}`);
+    console.log(`  safety=${result.safety} resilienceScore=${result.resilienceScore} convergenceStability=${result.convergenceStability} adversarialResistance=${result.adversarialResistance}`);
+    console.log(`  successRate=${result.successRate}% finalitySuccessRate=${result.finalitySuccessRate}%`);
+    console.log(`  failures=${JSON.stringify(result.failureDistribution)}`);
+    console.log(`  histogram=${histogramSummary(result.convergenceHistogram || {})}`);
+    if (!model.ok) {
+      console.log('  model-checker-counterexample:');
+      console.log(modelChecker.explain(model));
     }
-    const tag = r.pass ? '✔ PASS' : '✘ FAIL';
-    const ms  = r.convergenceMs != null ? `${r.convergenceMs}ms` : 'n/a';
-    console.log(`${tag}   (${ms})`);
-    console.log(`         ${r.detail}`);
-    results.push(r);
-    if (r.pass) overall.pass++; else overall.fail++;
   }
 
-  console.log();
-  console.log(bar(60, '─'));
-  console.log(`  Results: ${overall.pass} passed, ${overall.fail} failed`);
-  console.log(bar(60, '─'));
+  const aggregate = results.reduce((acc, r) => {
+    acc.pass += r.pass ? 1 : 0;
+    acc.fail += r.pass ? 0 : 1;
+    acc.resilience += r.resilienceScore || 0;
+    acc.stability += r.convergenceStability || 0;
+    acc.adversarial += r.adversarialResistance || 0;
+    return acc;
+  }, { pass: 0, fail: 0, resilience: 0, stability: 0, adversarial: 0 });
 
-  if (overall.fail === 0) {
-    console.log('\n  ✔ NDAP survived all adversarial conditions.\n');
-    process.exit(0);
-  } else {
-    console.log('\n  ✘ One or more safety invariants were broken.\n');
-    process.exit(1);
-  }
+  console.log('\nSummary');
+  console.log(`  scenariosPassed=${aggregate.pass}/${results.length}`);
+  console.log(`  averageResilience=${Math.round(aggregate.resilience / results.length)}`);
+  console.log(`  averageConvergenceStability=${Math.round(aggregate.stability / results.length)}`);
+  console.log(`  averageAdversarialResistance=${Math.round(aggregate.adversarial / results.length)}`);
+  console.log(`  overall=${aggregate.fail === 0 ? 'PASS' : 'FAIL'}`);
+
+  process.exit(aggregate.fail === 0 ? 0 : 1);
 }
 
 main().catch((err) => {
-  console.error('\nFATAL:', err.message);
+  console.error('FATAL', err);
   process.exit(1);
 });

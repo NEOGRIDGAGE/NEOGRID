@@ -1,12 +1,14 @@
 class NetworkEmulator {
-  constructor() {
-    this._nodes        = new Map();   // nodeId -> SimulatedNode
-    this._delayRange   = [0, 0];
-    this._dropProb     = 0;
-    this._reorderWin   = 0;
-    this._partitions   = null;        // null = no partition, Map<nodeId, groupId>
-    this._queue        = [];
-    this._stats        = { sent: 0, dropped: 0, delayed: 0, reordered: 0 };
+  constructor({ topology = 10 } = {}) {
+    this._nodes = new Map();
+    this._topology = topology;
+    this._stochastic = { mean: 40, stddev: 18, jitter: 12 };
+    this._dropProb = 0;
+    this._burst = null;
+    this._partitions = null;
+    this._epoch = 0;
+    this._stats = { sent: 0, dropped: 0, delayed: 0, reordered: 0 };
+    this._queue = [];
   }
 
   register(node) {
@@ -15,20 +17,29 @@ class NetworkEmulator {
     return this;
   }
 
-  // ── Controls ────────────────────────────────────────────────────────────────
+  setTopology(size) {
+    this._topology = size;
+    return this;
+  }
 
-  delayMessages([minMs, maxMs]) {
-    this._delayRange = [minMs, maxMs];
+  delayMessages(msRange) {
+    const [min, max] = msRange;
+    this._stochastic = { ...this._stochastic, mean: (min + max) / 2, stddev: Math.max(1, (max - min) / 6) };
     return this;
   }
 
   dropMessages(probability) {
-    this._dropProb = Math.max(0, Math.min(1, probability));
+    this._dropProb = Math.max(0, Math.min(0.1, probability));
     return this;
   }
 
   reorderMessages(windowSize) {
-    this._reorderWin = windowSize;
+    this._reorderWindow = windowSize;
+    return this;
+  }
+
+  burstFailure({ startEpoch = 0, duration = 1, dropMultiplier = 2, delayMultiplier = 2 } = {}) {
+    this._burst = { startEpoch, duration, dropMultiplier, delayMultiplier };
     return this;
   }
 
@@ -40,51 +51,42 @@ class NetworkEmulator {
     return this;
   }
 
+  randomPartition(epoch = this._epoch) {
+    const ids = Array.from(this._nodes.keys());
+    const split = Math.max(1, Math.floor(ids.length / 2 + (Math.random() - 0.5) * Math.min(4, ids.length / 3)));
+    const shuffled = [...ids].sort(() => Math.random() - 0.5);
+    this.partitionNetwork([shuffled.slice(0, split), shuffled.slice(split)]);
+    this._epoch = epoch;
+    return this;
+  }
+
   healNetwork() {
     this._partitions = null;
-    this._stats.reordered = 0;
+    this._burst = null;
     return this;
   }
 
-  reset() {
-    this._delayRange = [0, 0];
-    this._dropProb   = 0;
-    this._reorderWin = 0;
-    this._partitions = null;
-    this._queue      = [];
-    return this;
-  }
-
-  stats() { return { ...this._stats }; }
-
-  // ── Routing ─────────────────────────────────────────────────────────────────
-
-  route(fromId, msg) {
+  route(fromId, msg, meta = {}) {
     this._stats.sent++;
-
     const recipients = Array.from(this._nodes.keys()).filter((id) => id !== fromId);
-
     for (const toId of recipients) {
-      if (!this._canDeliver(fromId, toId)) {
+      if (!this._canDeliver(fromId, toId, meta)) {
         this._stats.dropped++;
         continue;
       }
-      if (Math.random() < this._dropProb) {
+      if (Math.random() < this._effectiveDrop()) {
         this._stats.dropped++;
         continue;
       }
-
-      const delay = this._sampleDelay();
-      if (delay === 0 && this._reorderWin === 0) {
+      const delay = this._sampleDelay(meta);
+      if (delay <= 0 && !this._reorderWindow) {
         this._deliver(toId, msg);
       } else {
         this._stats.delayed++;
         const envelope = { toId, msg, at: Date.now() + delay };
-        if (this._reorderWin > 0) {
+        if (this._reorderWindow) {
           this._queue.push(envelope);
-          if (this._queue.length >= this._reorderWin) {
-            this._flushQueue();
-          }
+          if (this._queue.length >= this._reorderWindow) this._flushQueue();
         } else {
           setTimeout(() => this._deliver(toId, msg), delay);
         }
@@ -92,22 +94,40 @@ class NetworkEmulator {
     }
   }
 
-  // Flush any pending reorder queue immediately (call after scenarios end to drain)
   flush() {
     this._flushQueue();
   }
 
-  // ── Private ─────────────────────────────────────────────────────────────────
+  stats() {
+    return { ...this._stats, nodes: this._nodes.size, topology: this._topology };
+  }
 
-  _canDeliver(fromId, toId) {
+  _canDeliver(fromId, toId, meta = {}) {
     if (!this._partitions) return true;
+    if (meta.forceDeliver) return true;
     return this._partitions.get(fromId) === this._partitions.get(toId);
   }
 
-  _sampleDelay() {
-    const [min, max] = this._delayRange;
-    if (min === 0 && max === 0) return 0;
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+  _effectiveDrop() {
+    if (!this._burst) return this._dropProb;
+    if (this._epoch >= this._burst.startEpoch && this._epoch < this._burst.startEpoch + this._burst.duration) {
+      return Math.min(0.5, this._dropProb * this._burst.dropMultiplier);
+    }
+    return this._dropProb;
+  }
+
+  _sampleDelay(meta = {}) {
+    if (meta.priority === 'low') return Math.max(0, this._gaussianDelay() * 1.2);
+    return this._gaussianDelay();
+  }
+
+  _gaussianDelay() {
+    const { mean, stddev, jitter } = this._stochastic;
+    const u1 = Math.max(Number.EPSILON, Math.random());
+    const u2 = Math.random();
+    const gaussian = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    const noisy = mean + gaussian * stddev + (Math.random() - 0.5) * jitter;
+    return Math.max(0, Math.round(noisy));
   }
 
   _deliver(toId, msg) {

@@ -1,0 +1,198 @@
+You are working inside:
+
+neogrid-ndap/testnet-simulator/
+
+This system already contains:
+- deterministic adversarial scenarios
+- Byzantine actors
+- network emulator
+- consensus validator checks
+- NDAP integration
+
+DO NOT modify NDAP core.
+
+ONLY extend the simulator into a full adversarial + formal validation environment.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Upgrade the testnet simulator into:
+
+NDAP Advanced Validation System v2
+
+It must include:
+
+1. Adaptive Byzantine adversary engine
+2. Large-scale probabilistic network simulation (10–100 nodes)
+3. Formal invariants + model checking layer
+
+------------------------------------------------------------
+STEP 1 — ADAPTIVE BYZANTINE ADVERSARY ENGINE
+------------------------------------------------------------
+
+Create:
+
+/testnet-simulator/actors/adaptiveByzantine.js
+
+This adversary must:
+
+- observe network state each round
+- adapt attack strategy dynamically
+- choose best attack vector per condition
+
+Capabilities:
+- dynamic leader targeting
+- quorum disruption attacks
+- timing-based equivocation
+- selective message suppression
+- strategic delayed vote injection
+
+It MUST NOT use fixed attack scripts.
+
+It MUST behave like a learning adversary:
+- evaluate system state
+- pick best attack strategy per round
+
+------------------------------------------------------------
+STEP 2 — PROBABILISTIC NETWORK MODEL (SCALE LAYER)
+------------------------------------------------------------
+
+Replace or extend:
+
+/testnet-simulator/network/emulator.js
+
+Add:
+
+1. stochastic delay model:
+   - random latency per message (gaussian + jitter)
+
+2. packet loss model:
+   - probabilistic drop per link (0–10%)
+
+3. burst failure model:
+   - temporary network degradation windows
+
+4. large-scale topology mode:
+   - support 10, 25, 50, 100 node simulations
+
+5. random partition generator:
+   - dynamic cluster splits per epoch
+
+------------------------------------------------------------
+STEP 3 — LARGE SCALE TEST RUNNER
+
+Modify:
+
+/testnet-simulator/run.js
+
+Add modes:
+
+runMode:
+- small (5 nodes)
+- medium (25 nodes)
+- large (100 nodes)
+
+Each run must output:
+- convergence time distribution
+- quorum stability score
+- finality success rate
+- failure classification (if any)
+
+Must run multiple iterations per scenario (statistical sampling)
+
+------------------------------------------------------------
+STEP 4 — FORMAL INVARIANTS + MODEL CHECKING LAYER
+
+Create:
+
+/testnet-simulator/formal/
+
+1. invariants.js
+
+Define executable invariants:
+
+- SafetyInvariant:
+  no two different FINALIZED states at same height
+
+- QuorumInvariant:
+  finalization only if >= 2/3 weighted votes
+
+- DeterminismInvariant:
+  identical inputs → identical stateRoot
+
+- ValidatorConsistencyInvariant:
+  validator set identical across nodes per epoch
+
+2. modelChecker.js
+
+Must:
+- simulate all possible state transitions per round
+- detect invariant violations
+- record counterexamples
+
+If violation found:
+→ output full trace of failure path
+
+------------------------------------------------------------
+STEP 5 — ADVERSARIAL + STOCHASTIC COMBINED SCENARIOS
+
+Update scenarios:
+
+/testnet-simulator/scenarios/
+
+Modify all scenarios to support:
+
+- probabilistic network behavior
+- adaptive adversary injection
+- multi-run statistical validation (N=20–50 runs)
+
+Scenarios must now return:
+
+- success rate %
+- failure distribution
+- convergence histogram
+- worst-case path trace
+
+------------------------------------------------------------
+STEP 6 — GLOBAL VALIDATION ENGINE
+
+Modify:
+
+/testnet-simulator/validator/checker.js
+
+Add:
+
+- statistical safety validation
+- invariant cross-run consistency
+- probabilistic failure detection
+- adversarial resilience score
+
+Output must include:
+
+{
+  safety: PASS | FAIL,
+  resilienceScore: 0–100,
+  convergenceStability: value,
+  adversarialResistance: value
+}
+
+------------------------------------------------------------
+FINAL REQUIREMENT
+
+The simulator must now answer:
+
+1. Does NDAP remain safe under adaptive adversary?
+2. Does NDAP remain stable under probabilistic network?
+3. Do invariants hold under all simulated executions?
+
+------------------------------------------------------------
+IMPORTANT RULES
+
+- DO NOT modify NDAP core
+- DO NOT change consensus logic
+- ONLY extend testnet simulator
+- ALL changes must be external validation layers
+
+------------------------------------------------------------
+END

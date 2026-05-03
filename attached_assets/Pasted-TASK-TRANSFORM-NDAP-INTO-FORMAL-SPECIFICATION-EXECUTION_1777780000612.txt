@@ -1,0 +1,180 @@
+TASK: TRANSFORM NDAP INTO FORMAL SPECIFICATION + EXECUTION MODEL + VISUAL ARCHITECTURE + REFERENCE ECOSYSTEM (NEOGRID STANDARD)
+
+PHASE 1 — CREATE FORMAL SPECIFICATION LAYER (HIGHEST PRIORITY)
+------------------------------------------------------------
+
+Create directory: /spec/
+
+Inside /spec, generate:
+
+1. execution-spec.md
+   - Define formal deterministic state transition function:
+
+     S(n+1) = F(S(n), TxBatch, ValidatorSet)
+
+   - Define:
+     • State S structure
+     • Transaction validity rules
+     • Execution function F()
+     • Deterministic ordering rules
+     • Finality condition (≥ 2/3 weighted quorum)
+
+2. consensus-spec.md
+   - Formalize:
+     • BFT phases (propose, prevote, precommit, finalize)
+     • Leader selection function
+     • Validator weight function (stake × reputation)
+     • Fork resolution rule under network partition
+
+3. tx-spec.md
+   - Define:
+     • Transaction structure
+     • Signature verification rules (Ed25519)
+     • Replay protection model
+     • Invalid transaction rejection rules
+     • Ordering constraints
+
+4. state-spec.md
+   - Define:
+     • State model (SMT + MMR roots)
+     • State transition constraints
+     • Immutability rules for finalized state
+     • Conflict resolution invariants
+
+------------------------------------------------------------
+
+PHASE 2 — CREATE VISUAL STATE + EXECUTION DIAGRAM LAYER
+------------------------------------------------------------
+
+Create directory: /spec/diagrams/
+
+Generate:
+
+1. state-machine.mmd
+   - BFT lifecycle:
+     PROPOSE → PREVOTE → PRECOMMIT → FINALIZED
+
+2. execution-flow.mmd
+   - Transaction lifecycle:
+     TX → VALIDATION → EXECUTION → STATE UPDATE → CONSENSUS TRIGGER
+
+3. fork-choice.mmd
+   - Represent:
+     • competing state branches
+     • quorum resolution
+     • finalization selection rule
+
+4. validator-set.mmd
+   - Represent:
+     • weighted validator graph
+     • leader rotation function
+     • quorum threshold computation
+
+------------------------------------------------------------
+
+PHASE 3 — ADD FORMAL MATHEMATICAL MODEL LAYER
+------------------------------------------------------------
+
+Inside execution-spec.md include:
+
+- Validator set:
+  V = set of validators
+  w(v) = stake(v) × reputation(v)
+
+- Quorum condition:
+  Q = Σw(v) ≥ 2/3 ΣV
+
+- State transition:
+  S' = F(S, T)
+
+- Finality condition:
+  A state is final if it is committed by ≥ 2/3 weighted quorum and cannot be reverted under any valid fork-choice rule.
+
+------------------------------------------------------------
+
+PHASE 4 — CREATE REFERENCE ARCHITECTURE MAP
+------------------------------------------------------------
+
+Create file:
+
+/spec/reference-architecture.md
+
+Define:
+
+NeoGrid Node Architecture:
+
+- Execution Layer (transaction processing + state transitions)
+- Consensus Layer (BFT + validator coordination)
+- Storage Layer (SMT/MMR + persistence)
+
+API mapping:
+
+/data → execution entrypoint
+/transfer → transaction flow handler
+/verify → state proof verification
+/log → observability layer
+/snapshot → state inspection layer
+
+System mapping:
+
+- Node.js → API + orchestration layer
+- Rust core → execution + cryptographic core
+- IPFS → distributed storage layer
+- ZK placeholder → future verification expansion layer
+
+------------------------------------------------------------
+
+PHASE 5 — LOCK PROTOCOL IDENTITY SPECIFICATION
+------------------------------------------------------------
+
+Create:
+
+/spec/protocol.json
+
+{
+  "name": "NeoGrid NDAP",
+  "version": "v1.0.0",
+  "status": "SPECIFICATION_STAGE",
+  "finality_model": "BFT_WEIGHTED_2_3_QUORUM",
+  "execution_model": "DETERMINISTIC_STATE_TRANSITION",
+  "storage_model": "SMT_MMR_HYBRID",
+  "core_properties": [
+    "Byzantine Fault Tolerant",
+    "Deterministic Execution",
+    "Verifiable State Transitions"
+  ],
+  "future_layers": [
+    "ZK_EXECUTION_PROOFS",
+    "FORMAL_VERIFICATION_CIRCUITS",
+    "HARDWARE_ACCELERATED VALIDATION"
+  ]
+}
+
+------------------------------------------------------------
+
+PHASE 6 — CRITICAL CONSTRAINT
+------------------------------------------------------------
+
+DO NOT modify existing consensus implementation logic.
+
+This task must:
+✔ ONLY ADD SPECIFICATION + DIAGRAM + ARCHITECTURE LAYER
+✔ NOT alter runtime behavior
+✔ NOT rename core consensus functions
+✔ NOT refactor execution code
+
+------------------------------------------------------------
+
+PHASE 7 — OUTPUT GOAL
+------------------------------------------------------------
+
+This transformation must result in:
+
+✔ Formal NeoGrid protocol specification layer
+✔ Deterministic execution model definition
+✔ Visual state machine diagrams
+✔ Clear separation of spec vs implementation
+✔ Reference architecture for ecosystem expansion
+✔ Foundation for future formal verification layer
+
+END TASK

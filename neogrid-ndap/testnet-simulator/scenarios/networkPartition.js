@@ -44,8 +44,7 @@ async function singleRun({ nodeCount }) {
   emulator.randomPartition();
   emulator.dropMessages(0.05);
   const leader = nodes.find((n) => vs.getLeader(0, 0) === n.nodeId) || nodes[0];
-  const adversary = new AdaptiveByzantineAdversary({ nodeId: leader.nodeId });
-  adversary.observe({ leaderId: leader.nodeId, quorumMargin: 1, avgLatencyMs: 80, partitioned: true, votePressure: 2 });
+  const adversary = new AdaptiveByzantineAdversary({ nodeId: leader.nodeId, seed: 2 });
   const attack = adversary.act({ leaderId: leader.nodeId, quorumMargin: 1, avgLatencyMs: 80, partitioned: true, votePressure: 2 });
   if (attack.delayVotes) emulator.delayMessages([40, 240]);
   leader.proposeState('partition-root', 'partition-mmr');

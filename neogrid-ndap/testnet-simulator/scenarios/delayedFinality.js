@@ -43,8 +43,7 @@ async function singleRun({ nodeCount }) {
   emulator.delayMessages([200, 600]);
   emulator.dropMessages(0.08);
   nodes.forEach((n) => emulator.register(n));
-  const adversary = new AdaptiveByzantineAdversary({ nodeId: nodes[0].nodeId });
-  adversary.observe({ leaderId: vs.getLeader(0, 0), quorumMargin: 2, avgLatencyMs: 450, partitioned: false, votePressure: 2 });
+  const adversary = new AdaptiveByzantineAdversary({ nodeId: nodes[0].nodeId, seed: 4 });
   const leader = nodes.find((n) => vs.getLeader(0, 0) === n.nodeId) || nodes[0];
   leader.proposeState('delayed-root', 'delayed-mmr');
   await sleep(1800);

@@ -28,9 +28,8 @@ async function singleRun({ nodeCount, runMode }) {
   allNodes.forEach((n) => { n.validators = vs; n.bft._validators = vs; });
   const emulator = new NetworkEmulator({ topology: nodeCount });
   allNodes.forEach((n) => emulator.register(n));
-  const adversary = new AdaptiveByzantineAdversary({ nodeId: evil.nodeId });
+  const adversary = new AdaptiveByzantineAdversary({ nodeId: evil.nodeId, seed: 1 });
   const roundState = { leaderId: vs.getLeader(0, 0), quorumMargin: 1, avgLatencyMs: 60, partitioned: false, votePressure: 2 };
-  adversary.observe(roundState);
   const attack = adversary.act(roundState);
   if (attack.suppress) evil.sendMessage({ type: 'VIEW_CHANGE', height: 0, view: 1, nodeId: evil.nodeId, reason: 'suppression', timestamp: Date.now() });
   if (attack.equivocate) evil.sendConflictingProposals('evil-root-a', 'evil-root-b');

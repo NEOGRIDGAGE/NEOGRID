@@ -1,0 +1,187 @@
+You are working inside:
+
+neogrid-ndap/testnet-simulator/
+
+This system is already upgraded to:
+- adaptive Byzantine adversary
+- probabilistic network model
+- formal invariant checks
+- statistical validation engine
+
+DO NOT add new features.
+
+YOUR TASK NOW IS FINALIZATION AND STABILIZATION OF THE SIMULATOR.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Convert the simulator into a:
+
+NDAP Protocol Evaluation Harness v3 (STABLE SCIENTIFIC MODE)
+
+It must:
+- stop evolving dynamically
+- produce repeatable evaluation outputs
+- enforce bounded simulation scope
+- generate structured resilience reports
+
+------------------------------------------------------------
+STEP 1 — FREEZE SIMULATOR BEHAVIOR MODEL
+------------------------------------------------------------
+
+Create:
+
+/testnet-simulator/core/simulatorConfig.js
+
+Define fixed parameters:
+
+- maxNodes: 100
+- defaultRunsPerScenario: 20
+- adversaryMode: adaptive (fixed implementation, no self-modification)
+- networkMode: stochastic (fixed distribution, no runtime changes)
+
+IMPORTANT:
+No runtime self-modification of adversary or network models.
+
+------------------------------------------------------------
+STEP 2 — STANDARDIZE OUTPUT FORMAT
+
+Modify run.js to output structured JSON:
+
+{
+  scenario: string,
+  nodeCount: number,
+  runs: number,
+  safety: PASS | FAIL,
+  resilienceScore: 0-100,
+  convergenceStats: {
+    mean: number,
+    variance: number
+  },
+  failureModes: [string],
+  invariantViolations: number
+}
+
+------------------------------------------------------------
+STEP 3 — ADD RESILIENCE SCORING ENGINE
+
+Create:
+
+/testnet-simulator/metrics/resilienceScore.js
+
+Compute:
+
+1. Safety Score (0–40)
+   - no double finality
+   - invariant pass rate
+
+2. Stability Score (0–30)
+   - convergence consistency
+   - variance of finality time
+
+3. Adversarial Resistance Score (0–30)
+   - success rate of Byzantine attacks
+
+Total = 100
+
+------------------------------------------------------------
+STEP 4 — LIMIT ADAPTIVE ADVERSARY BEHAVIOR
+
+Modify:
+
+/actors/adaptiveByzantine.js
+
+REQUIREMENT:
+
+- adversary must NOT evolve or learn during a run
+- must use fixed strategy selection function
+- strategies are chosen deterministically per scenario seed
+
+This ensures reproducibility.
+
+------------------------------------------------------------
+STEP 5 — ADD SCENARIO BOUNDARY SYSTEM
+
+Create:
+
+/testnet-simulator/scenarios/scenarioRegistry.js
+
+Define explicit allowed scenarios only:
+
+- singleLeaderFailure
+- networkPartition
+- equivocationAttack
+- delayedFinality
+
+No dynamic scenario generation allowed.
+
+------------------------------------------------------------
+STEP 6 — ADD FAILURE CLASSIFICATION SYSTEM
+
+Create:
+
+/testnet-simulator/analysis/failureClassifier.js
+
+Classify failures into:
+
+- SAFETY_VIOLATION (critical)
+- LIVENESS_FAILURE (no convergence)
+- NETWORK_DEGRADATION (timing issues)
+- BYZANTINE_SUCCESS (attack succeeded)
+
+------------------------------------------------------------
+STEP 7 — FINAL REPORT GENERATOR
+
+Create:
+
+/testnet-simulator/report/generateReport.js
+
+Output:
+
+NDAP SIMULATION REPORT v3
+
+Must include:
+
+- scenario summary
+- resilience scores
+- invariant violations
+- worst-case run trace
+- pass/fail classification
+
+------------------------------------------------------------
+STEP 8 — REMOVE DYNAMIC EVOLUTION BEHAVIOR
+
+CRITICAL:
+
+Disable:
+- any runtime mutation of adversary logic
+- any self-modifying network behavior
+- any scenario auto-generation
+
+This system must now be deterministic for the same seed.
+
+------------------------------------------------------------
+FINAL SYSTEM GUARANTEE
+
+After this upgrade, simulator MUST:
+
+✔ produce reproducible results
+✔ measure protocol resilience objectively
+✔ classify failure modes
+✔ NOT evolve behavior during execution
+✔ act as evaluation-only system (no self-expansion)
+
+------------------------------------------------------------
+IMPORTANT ARCHITECTURAL SHIFT
+
+This system is now:
+
+FROM:
+"adaptive evolving testnet system"
+
+TO:
+"bounded scientific evaluation framework for distributed consensus correctness"
+
+------------------------------------------------------------
+END

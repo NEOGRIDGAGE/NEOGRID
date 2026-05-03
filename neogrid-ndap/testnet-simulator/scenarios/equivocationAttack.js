@@ -30,8 +30,7 @@ async function singleRun({ nodeCount }) {
   all.forEach((n) => { n.validators = vs; n.bft._validators = vs; });
   const emulator = new NetworkEmulator({ topology: nodeCount });
   all.forEach((n) => emulator.register(n));
-  const adversary = new AdaptiveByzantineAdversary({ nodeId: evil.nodeId });
-  adversary.observe({ leaderId: vs.getLeader(0, 0), quorumMargin: 1, avgLatencyMs: 120, partitioned: false, votePressure: 3 });
+  const adversary = new AdaptiveByzantineAdversary({ nodeId: evil.nodeId, seed: 3 });
   evil.doubleVote('honest-root', 'evil-root');
   const leader = honest.find((n) => vs.getLeader(0, 0) === n.nodeId) || honest[0];
   leader.proposeState('honest-root', 'honest-mmr');

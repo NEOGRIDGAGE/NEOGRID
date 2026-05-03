@@ -1,24 +1,19 @@
 class AdaptiveByzantineAdversary {
-  constructor({ nodeId, rng = Math.random } = {}) {
+  constructor({ nodeId, seed = 0 } = {}) {
     this.nodeId = nodeId;
-    this.rng = rng;
-    this.history = [];
-  }
-
-  observe(roundState) {
-    this.history.push({ ...roundState, observedAt: Date.now() });
+    this.seed = seed;
   }
 
   chooseAttack(roundState) {
-    const leaderTargeted = roundState.leaderId === this.nodeId;
-    const quorumTight = roundState.quorumMargin <= 1;
-    const latencyHigh = roundState.avgLatencyMs >= 250;
-    const partitioned = roundState.partitioned;
-
-    if (leaderTargeted && quorumTight) return 'dynamic_leader_targeting';
-    if (partitioned && quorumTight) return 'quorum_disruption';
-    if (latencyHigh) return 'timing_equivocation';
-    if (roundState.votePressure >= 2) return 'selective_suppression';
+    const score = (roundState.leaderId === this.nodeId ? 3 : 0)
+      + (roundState.quorumMargin <= 1 ? 2 : 0)
+      + (roundState.avgLatencyMs >= 250 ? 2 : 0)
+      + (roundState.partitioned ? 1 : 0)
+      + (roundState.votePressure >= 2 ? 1 : 0)
+      + this.seed;
+    if (score >= 7) return 'quorum_disruption';
+    if (score >= 5) return 'timing_equivocation';
+    if (score >= 3) return 'selective_suppression';
     return 'delayed_vote_injection';
   }
 

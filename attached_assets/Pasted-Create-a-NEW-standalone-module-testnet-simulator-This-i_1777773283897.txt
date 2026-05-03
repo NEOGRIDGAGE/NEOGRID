@@ -1,0 +1,142 @@
+Create a NEW standalone module:
+
+/testnet-simulator/
+
+This is NOT part of NDAP core.
+This is an external adversarial test network layer.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Build a Byzantine Testnet Simulator for NDAP.
+
+It must:
+- run multiple simulated NDAP nodes
+- inject network failures
+- inject Byzantine behavior
+- validate consensus correctness
+
+It must NOT modify NDAP core logic.
+
+------------------------------------------------------------
+STEP 1 — CREATE SIMULATED NODE LAYER
+------------------------------------------------------------
+
+Create:
+
+/testnet-simulator/nodes/simulatedNode.js
+
+Each simulated node must:
+- wrap NDAP consensus engine instance
+- expose:
+  sendMessage()
+  receiveMessage()
+  proposeState()
+  vote()
+  finalize()
+
+Nodes must NOT trust each other.
+
+------------------------------------------------------------
+STEP 2 — NETWORK EMULATOR
+------------------------------------------------------------
+
+Create:
+
+/testnet-simulator/network/emulator.js
+
+Must support:
+
+1. delayMessages(msRange)
+2. dropMessages(probability)
+3. reorderMessages(windowSize)
+4. partitionNetwork(groups)
+5. healNetwork()
+
+All message routing between nodes must go through this layer.
+
+------------------------------------------------------------
+STEP 3 — BYZANTINE ACTOR INJECTION
+------------------------------------------------------------
+
+Create:
+
+/testnet-simulator/actors/byzantineActor.js
+
+Capabilities:
+- send conflicting proposals
+- double vote in same height
+- replay old messages
+- fake stateRoot broadcasts
+- impersonation attempts (must fail signature checks)
+
+------------------------------------------------------------
+STEP 4 — TEST SCENARIOS
+
+Create:
+
+/testnet-simulator/scenarios/
+
+1. singleLeaderFailure.js
+   - leader becomes malicious mid-round
+
+2. networkPartition.js
+   - split network into 2 groups
+   - test reconciliation after heal
+
+3. equivocationAttack.js
+   - validator double-votes across partitions
+
+4. delayedFinality.js
+   - introduce extreme message delay
+   - ensure eventual convergence
+
+------------------------------------------------------------
+STEP 5 — VALIDATION ENGINE
+
+Create:
+
+/testnet-simulator/validator/checker.js
+
+Must assert:
+
+- no two FINALIZED states at same height with different roots
+- all finalized states satisfy quorum rule
+- SMT root == MMR root consistency
+- eventual convergence after partition heals
+
+If violation occurs:
+→ mark test as FAILED PROTOCOL PROPERTY
+
+------------------------------------------------------------
+STEP 6 — TEST RUNNER
+
+Create:
+
+/testnet-simulator/run.js
+
+Must:
+- spin up N simulated nodes (default 5–10)
+- run all scenarios sequentially
+- print:
+  - PASS / FAIL per scenario
+  - convergence time
+  - failure points
+
+------------------------------------------------------------
+FINAL OUTPUT
+
+Simulator must produce:
+
+✔ PASS if NDAP survives all adversarial conditions
+✔ FAIL if any safety invariant is broken
+
+------------------------------------------------------------
+IMPORTANT RULE
+
+This simulator MUST NOT modify NDAP core logic.
+It only interacts through network messages.
+
+------------------------------------------------------------
+END

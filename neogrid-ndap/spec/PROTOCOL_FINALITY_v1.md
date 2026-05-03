@@ -1,13 +1,13 @@
 # NDAP Protocol Finality v1
 
 ## Finality
-A state is FINAL if:
+A state is final when:
 - >= 2/3 weighted PRECOMMIT votes
 - all signatures are valid
 - deterministic execution is confirmed
 - SMT root == MMR derived state root
 
-## Immutable Core
+## Core Integrity Verified Layer
 - consensus engine behavior
 - validator weighting rules
 - leader selection algorithm

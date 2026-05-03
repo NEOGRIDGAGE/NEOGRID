@@ -1,16 +1,16 @@
 const version = require('../src/core/version');
 const { computeCoreHash } = require('../src/core/core-hash');
-const { assertFrozenCore } = require('../src/core/freezeGuard');
+const { assertConsensusSafetyEnforcement } = require('../src/core/consensusIntegrityGuard');
 const { ValidatorSet } = require('../src/consensus/validator');
 const { generateIdentity } = require('../src/consensus/identity');
 const { BFTConsensus } = require('../src/consensus/bft');
 
 module.exports = async function(test, suite, assert) {
   await suite('Protocol freeze', async () => {
-    await test('version snapshot is FINAL 1.0.0', async () => {
+    await test('version snapshot is STABLE 1.0.0', async () => {
       assert.strictEqual(version.protocolName, 'NDAP');
       assert.strictEqual(version.version, '1.0.0');
-      assert.strictEqual(version.status, 'FINAL');
+      assert.strictEqual(version.status, 'STABLE');
     });
 
     await test('core hash snapshot is stable in-process', async () => {
@@ -19,8 +19,8 @@ module.exports = async function(test, suite, assert) {
       assert.deepStrictEqual(a, b);
     });
 
-    await test('freeze guard does not throw on locked core', async () => {
-      assert.doesNotThrow(() => assertFrozenCore());
+    await test('consensus safety enforcement does not throw on locked core', async () => {
+      assert.doesNotThrow(() => assertConsensusSafetyEnforcement());
     });
 
     await test('validator logic remains identical across runs', async () => {

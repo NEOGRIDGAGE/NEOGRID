@@ -1,0 +1,117 @@
+TASK: FINALIZE NEOGRID NDAP INTO PUBLIC REFERENCE PROTOCOL FOR EXTERNAL DEVELOPMENT
+
+PHASE 1 — FREEZE PROTOCOL BEHAVIOR (NO LOGIC CHANGES)
+------------------------------------------------------------
+
+- Do NOT modify consensus engine
+- Do NOT modify simulator logic
+- Do NOT modify runtime API behavior
+
+Add ONLY:
+- /spec/finality-lock.json
+
+{
+  "status": "FINALIZED_REFERENCE_IMPLEMENTATION",
+  "modification_policy": "NO_RUNTIME_CHANGES_ALLOWED",
+  "extension_policy": "ADD_ONLY_VIA_SPEC_OR_MODULES",
+  "consensus_core": "LOCKED",
+  "execution_core": "LOCKED"
+}
+
+------------------------------------------------------------
+
+PHASE 2 — CREATE OFFICIAL PROTOCOL SPECIFICATION LAYER
+------------------------------------------------------------
+
+Create /spec/
+
+Generate:
+
+1. protocol-spec.md
+   - full system definition:
+     • execution model
+     • consensus model
+     • validator model
+     • transaction lifecycle
+     • state transition rules
+
+2. execution-model.md
+   - formal definition:
+     S(n+1) = F(S(n), T, V)
+
+3. consensus-model.md
+   - BFT lifecycle + quorum rules
+
+4. state-model.md
+   - SMT/MMR state definitions + invariants
+
+5. tx-model.md
+   - transaction validity rules + ordering + replay protection
+
+------------------------------------------------------------
+
+PHASE 3 — CREATE VISUAL ARCHITECTURE FOR BUILDERS
+------------------------------------------------------------
+
+Create /spec/diagrams/
+
+Generate:
+
+- state-machine.mmd
+- execution-flow.mmd
+- consensus-flow.mmd
+- validator-graph.mmd
+- fork-resolution.mmd
+
+------------------------------------------------------------
+
+PHASE 4 — CREATE DEVELOPER HANDOFF ECOSYSTEM STRUCTURE
+------------------------------------------------------------
+
+Create /ecosystem/
+
+Add:
+
+1. README.md
+   - “How to build on NeoGrid NDAP”
+   - extension rules
+   - module boundaries
+   - safe extension guidelines
+
+2. extension-guide.md
+   - how to add:
+     • new consensus modules
+     • new execution modules
+     • new validation layers
+   - without modifying core
+
+3. client-reference/
+   - example integration structure (Node.js + Rust + API usage)
+
+------------------------------------------------------------
+
+PHASE 5 — DEFINE EXTENSION RULES (CRITICAL)
+------------------------------------------------------------
+
+Add to spec:
+
+RULES:
+- Core consensus cannot be modified
+- Only new modules can extend behavior
+- All extensions must respect state transition invariants
+- All external contributions must pass simulator validation layer
+
+------------------------------------------------------------
+
+PHASE 6 — FINAL OUTPUT GOAL
+------------------------------------------------------------
+
+The system must now be:
+
+✔ Stable reference implementation
+✔ Fully documented protocol spec
+✔ Extensible architecture for external developers
+✔ Simulator-backed validation system
+✔ No further internal evolution required for core logic
+
+END TASK

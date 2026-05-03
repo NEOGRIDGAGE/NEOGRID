@@ -1,0 +1,186 @@
+You are working inside the NEOGRID / NDAP repository.
+
+Your task is NOT to add features or improve performance.
+
+Your task is to DEFINE FINALITY for the system.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Create a locked production baseline:
+
+NDAP Production Core v1.0 FINAL
+
+This is the canonical stable version of the protocol.
+
+After this step:
+- NO consensus rule changes are allowed
+- NO validator model changes are allowed
+- NO SMT/MMR structural changes are allowed
+- NO BFT phase changes are allowed
+
+Only bug fixes and documentation improvements are allowed.
+
+------------------------------------------------------------
+STEP 1 — CREATE PROTOCOL FREEZE DOCUMENT
+------------------------------------------------------------
+
+Create:
+
+/spec/PROTOCOL_FINALITY_v1.md
+
+Include:
+
+1. What is FINALITY in NDAP
+   - A state is FINAL if:
+     * ≥ 2/3 weighted PRECOMMIT votes
+     * all signatures valid
+     * deterministic execution confirmed
+     * SMT root == MMR derived state root
+
+2. What is IMMUTABLE CORE
+   - consensus engine behavior
+   - validator weighting rules
+   - leader selection algorithm
+   - state transition rules
+
+3. What is NOT ALLOWED TO CHANGE
+   - quorum formula
+   - BFT phase order
+   - identity system
+   - SMT/MMR structures
+   - execution engine determinism rules
+
+------------------------------------------------------------
+STEP 2 — CREATE VERSIONED CORE SNAPSHOT
+------------------------------------------------------------
+
+Create:
+
+/src/core/version.js
+
+Export:
+
+{
+  protocolName: "NDAP",
+  version: "1.0.0",
+  status: "FINAL",
+  consensusFrozen: true,
+  stateModelFrozen: true
+}
+
+------------------------------------------------------------
+STEP 3 — ENFORCE CORE IMMUTABILITY IN CODE
+------------------------------------------------------------
+
+Modify consensus engine to include:
+
+- if version !== "1.0.0" AND coreModifiedDetected:
+    THROW ERROR: "PROTOCOL_CORE_MODIFICATION_NOT_ALLOWED"
+
+Add runtime guard:
+
+/src/core/freezeGuard.js
+
+This must:
+- detect changes to consensus-critical modules at runtime
+- prevent execution if core hash differs from locked hash
+
+------------------------------------------------------------
+STEP 4 — CREATE CORE HASH LOCK
+------------------------------------------------------------
+
+Compute and store:
+
+/spec/core-hash.json
+
+Includes:
+- hash of consensus module
+- hash of validator logic
+- hash of SMT implementation
+- hash of BFT engine
+
+This becomes the “canonical protocol fingerprint”.
+
+------------------------------------------------------------
+STEP 5 — DEFINE EVOLUTION MODEL (IMPORTANT)
+------------------------------------------------------------
+
+Create:
+
+/spec/EVOLUTION_MODEL.md
+
+Define:
+
+The system evolves ONLY through:
+
+1. Versioned upgrades (v1 → v2 → v3)
+2. Backward-compatible extension layers
+3. Optional modules (never touching core consensus)
+
+Explicitly define:
+
+CORE = immutable
+EXTENSIONS = mutable
+
+------------------------------------------------------------
+STEP 6 — ADD PROTOCOL BOUNDARY ENFORCEMENT TESTS
+------------------------------------------------------------
+
+Create:
+
+/tests/protocol-freeze.test.js
+
+Must verify:
+
+- consensus rules cannot be modified without version bump
+- SMT/MMR structure cannot be altered
+- validator logic is identical across runs
+- state transitions remain deterministic
+
+------------------------------------------------------------
+STEP 7 — FINALIZE SYSTEM STATE REPORT
+------------------------------------------------------------
+
+Add endpoint:
+
+GET /protocol-status
+
+Returns:
+
+{
+  version: "1.0.0",
+  status: "FINAL",
+  coreFrozen: true,
+  consensusLocked: true,
+  extensionAllowed: true
+}
+
+------------------------------------------------------------
+FINAL OUTCOME
+------------------------------------------------------------
+
+After this:
+
+The system MUST behave as:
+
+✔ A frozen consensus protocol core
+✔ With explicit upgrade boundaries
+✔ With immutable state machine rules
+✔ With versioned evolution model
+
+------------------------------------------------------------
+CRITICAL RULE
+------------------------------------------------------------
+
+From this point forward:
+
+If any change modifies consensus logic:
+→ MUST trigger version bump requirement (v1 → v2)
+
+No silent evolution is allowed.
+
+------------------------------------------------------------
+END
+------------------------------------------------------------

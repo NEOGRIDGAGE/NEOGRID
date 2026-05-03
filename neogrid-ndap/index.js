@@ -6,6 +6,9 @@ const { zkPipeline }        = require('./src/zk');
 const { canonicalHash }     = require('./src/ipfs');
 const { randomHex }         = require('./src/utils');
 const { initNetwork }       = require('./src/network/index');
+const version = require('./src/core/version');
+const { computeCoreHash } = require('./src/core/core-hash');
+const { ConsensusMetrics } = require('./src/observability/metrics');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -13,6 +16,7 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json({ limit: '1mb' }));
 
 const engine  = new Engine();
+const metrics = new ConsensusMetrics();
 
 console.log('NDAP ENTERPRISE CORE ACTIVE');
 console.log('NDAP DISTRIBUTED NODE STARTED');
@@ -32,6 +36,7 @@ app.post('/data', async (req, res) => {
 
     network.broadcastStateUpdate(smtRoot, mmrRoot);
     const finalizedState = network.triggerConsensus(smtRoot, mmrRoot);
+    if (finalizedState) metrics.finalize(finalizedState.height);
 
     return res.json({
       key:      assetId,
@@ -78,6 +83,7 @@ app.post('/transfer', async (req, res) => {
     network.broadcastStateUpdate(smtRoot, mmrRoot);
     network.broadcastTransaction(tx, transition.txHash);
     const finalizedState = network.triggerConsensus(smtRoot, mmrRoot);
+    if (finalizedState) metrics.finalize(finalizedState.height);
 
     return res.json({
       success:  true,
@@ -157,6 +163,21 @@ app.get('/peers', (req, res) => {
     nodeId:        network.nodeId(),
     peers:         network.peerCount(),
     consensusView: { height: cons.height(), view: cons.view(), phase: cons.phase() },
+  });
+});
+
+app.get('/metrics', (req, res) => {
+  res.json(metrics.snapshot());
+});
+
+app.get('/protocol-status', (req, res) => {
+  res.json({
+    version: version.version,
+    status: version.status,
+    coreFrozen: version.consensusFrozen && version.stateModelFrozen,
+    consensusLocked: true,
+    extensionAllowed: true,
+    coreHash: computeCoreHash(),
   });
 });
 

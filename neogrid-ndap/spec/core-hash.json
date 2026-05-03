@@ -1,0 +1,6 @@
+{
+  "consensus": "locked",
+  "validator": "locked",
+  "smt": "locked",
+  "bft": "locked"
+}

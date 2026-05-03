@@ -1,19 +1,20 @@
 # NDAP Yellow Paper
 
-This document is the canonical NDAP protocol specification and the single source of truth for protocol behavior.
+This document is the single source of truth for NDAP.
 
-## Core Contents
-- formal state machine
-- invariants
-- adversary model
-- consensus rules
-- trace model
+## Formal State Machine
+NDAP defines a deterministic consensus state machine with explicit transitions for proposal, voting, finalization, timeout, and view change.
 
-## Canonical Status
-NDAP is defined here as a protocol specification ecosystem, not as a single implementation.
+## Consensus Rules
+- weighted quorum governs finality
+- leader selection is deterministic per height and view
+- state transitions are only valid when preconditions are met
 
-## State Machine
-NDAP clients MUST implement the protocol state machine specified by the RFC and this Yellow Paper.
+## Quorum Logic
+Finalization requires at least 2/3 weighted support from the active validator set.
+
+## Adversary Model
+The network is asynchronous and adversarial. The adversary may delay, reorder, drop, or inject invalid messages, but may not forge valid signatures.
 
 ## Invariants
 - safety
@@ -21,19 +22,5 @@ NDAP clients MUST implement the protocol state machine specified by the RFC and 
 - determinism
 - quorum correctness
 
-## Adversary Model
-- delay
-- reorder
-- drop
-- invalid injection
-
-## Consensus Rules
-- weighted quorum
-- deterministic leader selection
-- view changes
-- finality conditions
-
-## Trace Model
-- ordered
-- replayable
-- verifiable
+## Execution Semantics
+All honest nodes must converge on the same final state when given the same ordered trace and valid inputs.

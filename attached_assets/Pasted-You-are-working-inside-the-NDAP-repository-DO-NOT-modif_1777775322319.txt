@@ -1,0 +1,187 @@
+You are working inside the NDAP repository.
+
+DO NOT modify consensus logic or simulator behavior.
+
+THIS TASK IS PURELY ORGANIZATIONAL: convert NDAP into a multi-repository protocol ecosystem.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Transform NDAP into a GitHub-style protocol ecosystem consisting of:
+
+- specification repository (truth layer)
+- reference implementation
+- multiple client implementations
+- conformance test suite
+- documentation hub
+- simulator (research tool)
+
+------------------------------------------------------------
+STEP 1 — CREATE ECOSYSTEM ROOT STRUCTURE
+
+Create folder:
+
+/ndap-ecosystem/
+
+Inside it create subfolders:
+
+/spec/
+/reference/
+/clients/node/
+/clients/rust/
+/clients/wasm/
+/conformance/
+/simulator/
+/docs/
+
+------------------------------------------------------------
+STEP 2 — SPECIFICATION REPOSITORY (TRUTH LAYER)
+
+Create:
+
+/ndap-ecosystem/spec/NDAP_YELLOW_PAPER.md
+
+Include:
+- formal state machine
+- consensus rules
+- quorum logic
+- adversary model
+- invariants
+- execution semantics
+
+THIS IS THE SINGLE SOURCE OF TRUTH.
+
+------------------------------------------------------------
+STEP 3 — REFERENCE IMPLEMENTATION
+
+Create:
+
+/ndap-ecosystem/reference/README.md
+
+Explain:
+- this is canonical implementation
+- used for behavioral comparison only
+- not authoritative for protocol definition
+
+Link to existing NDAP core engine.
+
+------------------------------------------------------------
+STEP 4 — NODE JS CLIENT
+
+Create:
+
+/ndap-ecosystem/clients/node/
+
+Include:
+- client wrapper for NDAP network
+- state sync interface
+- consensus interaction API
+
+Must implement:
+- applyEvent()
+- getState()
+- syncState()
+
+------------------------------------------------------------
+STEP 5 — RUST CLIENT STRUCTURE
+
+Create:
+
+/ndap-ecosystem/clients/rust/
+
+Include:
+- Cargo project layout
+- client interface definition
+- deterministic state machine mapping
+
+Provide skeleton only (no full rewrite of core logic)
+
+------------------------------------------------------------
+STEP 6 — WASM CLIENT STRUCTURE
+
+Create:
+
+/ndap-ecosystem/clients/wasm/
+
+Include:
+- lightweight validator runtime
+- browser-compatible execution model
+- minimal state sync logic
+
+------------------------------------------------------------
+STEP 7 — CONFORMANCE TEST SUITE (CRITICAL)
+
+Create:
+
+/ndap-ecosystem/conformance/
+
+Add:
+
+1. trace_replay_test.js
+2. invariant_validation_test.js
+3. adversarial_attack_test.js
+4. cross_client_consistency_test.js
+
+Each test must:
+- accept any client implementation
+- run standardized trace
+- compare final states against reference implementation
+
+------------------------------------------------------------
+STEP 8 — SIMULATOR (RESEARCH TOOL ONLY)
+
+Move existing simulator into:
+
+/ndap-ecosystem/simulator/
+
+Add note:
+- not part of protocol definition
+- used only for adversarial research and stress testing
+
+------------------------------------------------------------
+STEP 9 — DOCUMENTATION HUB
+
+Create:
+
+/ndap-ecosystem/docs/ECOSYSTEM.md
+
+Explain:
+
+- NDAP is a protocol, not a codebase
+- spec defines truth
+- reference defines behavior baseline
+- clients are interchangeable implementations
+- conformance tests define correctness
+
+Include ecosystem diagram explanation
+
+------------------------------------------------------------
+STEP 10 — GITHUB-READY DESIGN PRINCIPLE
+
+Ensure system enforces:
+
+✔ multiple independent implementations possible
+✔ no single implementation is authoritative
+✔ correctness defined only by spec + conformance tests
+✔ ecosystem is language-agnostic
+
+------------------------------------------------------------
+FINAL RESULT
+
+After this transformation NDAP becomes:
+
+A multi-repository distributed protocol ecosystem with:
+- formal specification layer
+- reference implementation
+- independent clients
+- conformance validation system
+- adversarial simulation environment
+
+------------------------------------------------------------
+DO NOT modify consensus logic or core engine.
+
+ONLY restructure into ecosystem architecture.
+
+------------------------------------------------------------
+END

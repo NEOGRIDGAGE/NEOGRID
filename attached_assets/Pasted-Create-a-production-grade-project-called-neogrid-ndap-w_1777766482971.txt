@@ -1,0 +1,190 @@
+Create a production-grade project called "neogrid-ndap" with Node.js API, Rust core, IPFS integration, basic zk placeholder, and formal spec scaffolding.
+
+Follow these steps EXACTLY:
+
+1. Initialize project:
+- npm init -y
+- npm install express body-parser crypto ipfs-http-client
+
+2. Create folder structure:
+
+neogrid-ndap/
+  package.json
+  index.js
+
+  /src
+    utils.js
+    smt.js
+    mmr.js
+    did.js
+    tx.js
+    ipfs.js
+
+  /core-rust
+    Cargo.toml
+    /src
+      lib.rs
+      hash.rs
+      tx.rs
+
+  /zk
+    /circuits
+      tx.circom
+
+  /spec
+    ndap.tla
+
+  /docs
+    README.md
+    SPEC.md
+    SECURITY.md
+
+3. Create Node API server (index.js):
+
+- Express server on port 3000
+- Endpoints:
+  POST /data
+  POST /transfer
+  POST /verify
+  GET /log
+
+4. utils.js:
+
+- SHA256 hash function using crypto
+
+5. smt.js:
+
+- Simple deterministic key-value store
+- computeRoot() = hash of sorted entries
+- getProof() returns existence proof
+
+6. mmr.js:
+
+- Append-only array
+- append(data) stores hash
+- getAll() returns log
+
+7. did.js:
+
+- Generate ed25519 keypair
+- DID = "did:neogrid:" + hash(publicKey)
+
+8. tx.js:
+
+- Create transaction object
+- sign + verify functions
+
+9. ipfs.js:
+
+- Use ipfs-http-client
+- upload JSON → return CID
+
+10. Integrate in /data endpoint:
+
+- Hash data
+- Upload to IPFS
+- Store in SMT
+- Append CID to MMR
+- Return:
+  key, cid, root, logIndex
+
+11. /transfer endpoint:
+
+- Validate ownership
+- Update state immutably
+- Append log entry
+
+12. /verify endpoint:
+
+- Validate proof
+
+13. Rust core:
+
+Create Cargo.toml:
+
+[package]
+name = "ndap-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sha2 = "0.10"
+
+Create hash.rs:
+
+- SHA256 hash function
+
+Create tx.rs:
+
+- Transaction struct
+- validate() function
+
+Create lib.rs:
+
+- expose modules
+
+14. ZK placeholder:
+
+Create tx.circom:
+
+template TxVerify() {
+  signal input balance;
+  signal input amount;
+  signal output valid;
+  valid <== balance >= amount;
+}
+
+15. TLA+ spec:
+
+Create ndap.tla:
+
+---- MODULE NDAP ----
+VARIABLES assets, log
+
+Init ==
+  assets = [id ∈ {} |-> 0] /
+  log = << >>
+
+Next ==
+  ∃ tx:
+    /\ TRUE
+    /\ log' = Append(log, tx)
+
+Spec ==
+  Init /\ [][Next]_<<assets, log>>
+
+====
+
+16. README.md:
+
+- Title: NeoGrid NDAP
+- Description: Verifiable DID Asset Protocol
+- Features:
+  - Merkle verification
+  - MMR logs
+  - IPFS distribution
+  - Rust core
+  - zk-ready
+
+17. SPEC.md:
+
+- Define:
+  - DID format
+  - transaction format
+  - state transition rules
+
+18. SECURITY.md:
+
+- List threats:
+  - tampering
+  - replay
+  - key compromise
+
+19. Final step:
+
+- Ensure server runs with:
+  node index.js
+
+- Ensure project runs without errors
+
+- Print "NDAP READY" on startup

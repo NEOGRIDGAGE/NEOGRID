@@ -1,0 +1,14 @@
+[package]
+name = "ndap-core"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+name = "ndap_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+sha2 = "0.10"
+
+[dev-dependencies]
+hex = "0.4"

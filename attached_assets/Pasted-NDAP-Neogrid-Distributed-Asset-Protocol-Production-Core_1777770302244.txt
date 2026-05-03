@@ -1,0 +1,322 @@
+NDAP (Neogrid Distributed Asset Protocol)
+Production Core Specification v1.0
+========================================
+
+STATUS:
+- Production Core (LOCKED)
+- Extension Layers (DEFERRED)
+- Experimental Modules (SEPARATED)
+
+------------------------------------------------------------
+1. SYSTEM OVERVIEW
+------------------------------------------------------------
+
+NDAP is a Byzantine Fault Tolerant, cryptographically verifiable distributed state machine system.
+
+It provides:
+
+- Deterministic asset and state transitions
+- Verifiable distributed consensus
+- Tamper-evident history logging
+- Multi-node state replication
+- Formal invariants over execution correctness
+
+NDAP is NOT:
+- a cryptocurrency system
+- a generic database
+- a probabilistic gossip network without finality
+
+It is a deterministic state agreement protocol.
+
+------------------------------------------------------------
+2. CORE DESIGN PRINCIPLES
+------------------------------------------------------------
+
+P1 — Determinism:
+All nodes must compute identical results given identical inputs.
+
+P2 — Verifiability:
+Any node can independently verify state correctness.
+
+P3 — Byzantine Safety:
+System tolerates up to f malicious nodes where n ≥ 3f + 1.
+
+P4 — Minimal Trusted Core:
+Core protocol must remain small, auditable, and stable.
+
+P5 — Extension Isolation:
+All advanced features must be optional and non-essential.
+
+------------------------------------------------------------
+3. CORE COMPONENTS (LOCKED SYSTEM)
+------------------------------------------------------------
+
+3.1 Identity Layer
+------------------
+- Ed25519 public/private keypair per node
+- nodeId = SHA256(publicKey)
+- All messages MUST be signed
+
+3.2 State Layer (SMT)
+---------------------
+Sparse Merkle Tree (SMT) is the canonical state store.
+
+Properties:
+- 256-bit keyspace
+- deterministic updates
+- inclusion + exclusion proofs
+
+Invariant:
+- Same inputs → identical SMT root across all nodes
+
+3.3 History Layer (MMR)
+-----------------------
+Merkle Mountain Range provides append-only log.
+
+Properties:
+- append-only structure
+- cryptographic history linking
+- tamper-evident sequence
+
+Invariant:
+- MMR root must monotonically grow and never fork
+
+3.4 Execution Layer (Rust Engine)
+----------------------------------
+Canonical state transition engine:
+
+Responsibilities:
+- validate transactions
+- compute SMT updates
+- compute MMR updates
+- return deterministic state root
+
+Rule:
+Node.js MUST NEVER mutate state directly.
+
+3.5 Networking Layer (Gossip + Sync)
+-------------------------------------
+Transport:
+- WebSocket-based peer mesh (v1)
+
+Responsibilities:
+- propagate proposals
+- propagate votes
+- sync state between nodes
+- detect divergence
+
+Messages:
+- STATE_PROPOSE
+- VOTE_PREVOTE
+- VOTE_PRECOMMIT
+- FINALIZED_STATE
+- SYNC_REQUEST
+- SYNC_RESPONSE
+
+------------------------------------------------------------
+4. CONSENSUS MODEL (BFT CORE)
+------------------------------------------------------------
+
+4.1 Model Type
+--------------
+Weighted Byzantine Fault Tolerant consensus
+
+4.2 Validator Set
+-----------------
+Each validator has:
+- stake
+- reputation
+- weight = stake × reputation
+
+4.3 Quorum Rule
+---------------
+A decision is FINAL if:
+
+SUM(weight of PREVOTE + PRECOMMIT approvals) ≥ 2/3 total network weight
+
+4.4 Consensus Phases
+--------------------
+
+Phase 1: Proposal
+- Leader proposes state root
+
+Phase 2: Prevote
+- Validators validate and vote
+
+Phase 3: Precommit
+- Validators confirm consensus
+
+Phase 4: Finalization
+- State becomes irreversible
+- Broadcast FINALIZED_STATE
+
+4.5 Leader Selection
+--------------------
+Deterministic round-robin:
+
+leader = height mod validator_count
+
+4.6 View Change
+---------------
+If timeout or failure:
+- trigger VIEW_CHANGE
+- rotate leader
+- re-propose state
+
+------------------------------------------------------------
+5. FAULT MODEL
+------------------------------------------------------------
+
+System tolerates:
+- Byzantine nodes
+- message delay
+- partial network partitions
+
+System does NOT tolerate:
+- > 1/3 malicious weight
+- cryptographic signature compromise
+- invalid execution engine
+
+------------------------------------------------------------
+6. SECURITY INVARIANTS
+------------------------------------------------------------
+
+I1 — State Consistency
+All nodes must agree on final SMT root per height.
+
+I2 — History Monotonicity
+MMR must never fork or rewrite past entries.
+
+I3 — Consensus Safety
+No two conflicting FINALIZED_STATE entries at same height.
+
+I4 — Execution Determinism
+Rust engine output must be identical across nodes.
+
+I5 — Signature Validity
+No unsigned or invalidly signed messages accepted.
+
+------------------------------------------------------------
+7. FINALITY MODEL
+------------------------------------------------------------
+
+A state is FINAL if:
+
+- ≥ 2/3 weighted PRECOMMIT votes received
+- all votes are cryptographically valid
+- execution is deterministic and verified
+
+Final state structure:
+
+{
+  height,
+  stateRoot,
+  smtRoot,
+  mmrRoot,
+  commitCert (aggregated signatures),
+  finalized: true
+}
+
+------------------------------------------------------------
+8. NETWORK BEHAVIOR RULES
+------------------------------------------------------------
+
+- Only proposals, votes, and final states are propagated
+- Duplicate messages MUST be ignored
+- Invalid messages MUST be dropped immediately
+- Gossip propagation MUST avoid loops
+
+------------------------------------------------------------
+9. FAILURE RECOVERY
+------------------------------------------------------------
+
+On divergence:
+- nodes request SYNC_RESPONSE
+- reconcile state via MMR log replay
+- recompute SMT root
+- reject invalid forks
+
+On leader failure:
+- trigger VIEW_CHANGE
+- select next deterministic leader
+
+------------------------------------------------------------
+10. EXTENSION LAYER ARCHITECTURE (DEFERRED)
+------------------------------------------------------------
+
+The following are NOT part of core:
+
+- zk-consensus proofs
+- slashing proofs
+- staking economics
+- libp2p migration
+- WASM execution layers
+- WebGPU acceleration
+- advanced DAG consensus
+- recursive proof compression
+
+These MAY be added ONLY as non-essential modules.
+
+Core protocol MUST remain valid without them.
+
+------------------------------------------------------------
+11. FUTURE EXTENSION INTERFACE (DEFINED BUT NOT ACTIVE)
+------------------------------------------------------------
+
+NDAP supports optional modules:
+
+interface ExtensionModule {
+  type: "zk" | "network" | "economics" | "compute",
+  hooks: {
+    preConsensus,
+    postConsensus,
+    validationOverride
+  }
+}
+
+Rule:
+Extensions MUST NOT modify core consensus rules.
+
+------------------------------------------------------------
+12. SYSTEM CLASSIFICATION
+------------------------------------------------------------
+
+NDAP v1.0 is:
+
+"A deterministic Byzantine Fault Tolerant distributed state machine with cryptographically verifiable execution and strict consensus finality."
+
+It is NOT:
+- a blockchain
+- a database
+- a probabilistic gossip system
+
+------------------------------------------------------------
+13. PRODUCTION READINESS STATUS
+------------------------------------------------------------
+
+CORE:
+✔ Consensus logic defined
+✔ Execution determinism enforced
+✔ State + history layers stable
+✔ Fault model defined
+✔ Finality guarantees specified
+
+EXTENSIONS:
+⏳ Deferred for future upgrades
+
+------------------------------------------------------------
+14. DESIGN LOCK RULE
+------------------------------------------------------------
+
+Any modification to:
+
+- consensus rules
+- SMT/MMR structure
+- execution determinism
+- finality logic
+
+REQUIRES version bump (v1.x → v2.0)
+
+------------------------------------------------------------
+END OF SPECIFICATION
+============================================================

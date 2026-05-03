@@ -7,6 +7,11 @@ const MESSAGE_TYPES = {
   SYNC_RESPONSE:         'SYNC_RESPONSE',
   PROOF_REQUEST:         'PROOF_REQUEST',
   PROOF_RESPONSE:        'PROOF_RESPONSE',
+  STATE_PROPOSE:         'STATE_PROPOSE',
+  VOTE_PREVOTE:          'VOTE_PREVOTE',
+  VOTE_PRECOMMIT:        'VOTE_PRECOMMIT',
+  FINALIZED_STATE:       'FINALIZED_STATE',
+  VIEW_CHANGE:           'VIEW_CHANGE',
 };
 
 function canonicalize(obj) {
@@ -22,13 +27,7 @@ function deterministicJSON(obj) {
 
 function createMessage(type, nodeId, payload) {
   if (!MESSAGE_TYPES[type]) throw new Error(`Unknown message type: ${type}`);
-  return {
-    type,
-    nodeId,
-    timestamp: Date.now(),
-    signature: null,
-    payload,
-  };
+  return { type, nodeId, timestamp: Date.now(), signature: null, payload };
 }
 
 function messageHash(msg) {
@@ -47,7 +46,8 @@ function serializeMessage(msg) {
 function parseMessage(raw) {
   let msg;
   try { msg = JSON.parse(raw); } catch { throw new Error('Invalid JSON in message'); }
-  if (!msg.type || !msg.nodeId || !msg.timestamp || !Object.prototype.hasOwnProperty.call(msg, 'payload')) {
+  if (!msg.type || !msg.nodeId || !msg.timestamp ||
+      !Object.prototype.hasOwnProperty.call(msg, 'payload')) {
     throw new Error('Malformed message: missing required fields');
   }
   if (!MESSAGE_TYPES[msg.type]) throw new Error(`Unknown message type: ${msg.type}`);

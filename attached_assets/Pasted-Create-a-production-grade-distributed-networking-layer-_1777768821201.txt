@@ -1,0 +1,266 @@
+Create a production-grade distributed networking layer for the existing "neogrid-ndap" project. Extend the current system into a multi-node verifiable state replication network.
+
+DO NOT delete existing files. ONLY add and modify as needed.
+
+---
+
+# 1. INSTALL DEPENDENCIES
+
+Run:
+
+npm install ws uuid express body-parser crypto
+
+---
+
+# 2. CREATE NEW DIRECTORY STRUCTURE
+
+Add:
+
+/src/network/
+  node.js
+  peer.js
+  gossip.js
+  sync.js
+  message.js
+  validator.js
+  index.js
+
+---
+
+# 3. CREATE WEBSOCKET NODE SERVER (src/network/node.js)
+
+Implement a WebSocket server per node:
+
+- Each node runs a WS server on a configurable port
+- Accepts peer connections
+- Broadcasts state updates
+- Handles incoming messages
+
+Core responsibilities:
+- maintain peer list
+- broadcast transactions
+- broadcast state roots
+- receive sync requests
+
+---
+
+# 4. DEFINE MESSAGE PROTOCOL (src/network/message.js)
+
+Define structured message types:
+
+const MESSAGE_TYPES = {
+  STATE_UPDATE,
+  TRANSACTION_BROADCAST,
+  SYNC_REQUEST,
+  SYNC_RESPONSE,
+  PROOF_REQUEST,
+  PROOF_RESPONSE
+}
+
+Each message MUST include:
+
+- nodeId
+- timestamp
+- signature (future hook)
+- payload
+
+Ensure deterministic JSON serialization.
+
+---
+
+# 5. PEER MANAGEMENT (src/network/peer.js)
+
+Implement:
+
+- addPeer(ws)
+- removePeer(ws)
+- getPeers()
+- broadcast(message)
+
+Peers are WebSocket connections.
+
+---
+
+# 6. GOSSIP LAYER (src/network/gossip.js)
+
+Implement gossip protocol:
+
+- When a node receives STATE_UPDATE:
+  - validate message
+  - forward to all peers except sender
+  - avoid duplicate processing
+
+Add message deduplication using message hash set.
+
+---
+
+# 7. SYNC PROTOCOL (src/network/sync.js)
+
+On peer connect or startup:
+
+1. Send SYNC_REQUEST:
+   {
+     type: "SYNC_REQUEST",
+     nodeId,
+     lastKnownRoot
+   }
+
+2. Peer responds with SYNC_RESPONSE:
+   {
+     stateRoot,
+     mmrRoot,
+     recentLogs[]
+   }
+
+3. Local node:
+   - validate logs
+   - recompute SMT root
+   - recompute MMR root
+   - compare state
+
+If mismatch:
+   - request missing logs
+   - resolve by highest valid proof chain
+
+---
+
+# 8. VALIDATION LAYER (src/network/validator.js)
+
+Before accepting ANY message:
+
+VALIDATE:
+
+- message structure
+- deterministic JSON parsing
+- SMT root consistency (via Rust engine hook if available)
+- MMR chain validity
+- transaction validity (if present)
+
+Reject invalid messages immediately.
+
+---
+
+# 9. NETWORK ENTRY POINT (src/network/index.js)
+
+Create main initializer:
+
+- Start WebSocket server
+- Connect to peer list (env PEERS)
+- Initialize gossip + sync system
+- Hook into existing Rust engine if available:
+
+IF Rust engine exists:
+  - forward validated transactions to Rust via child_process or stdin/stdout JSON bridge
+  - receive state root updates from Rust
+
+ELSE:
+  - fallback to JS engine (existing SMT/MMR logic)
+
+---
+
+# 10. STATE BROADCAST INTEGRATION
+
+Modify existing /data and /transfer endpoints in index.js:
+
+AFTER successful transaction:
+
+- create STATE_UPDATE message:
+
+{
+  type: "STATE_UPDATE",
+  nodeId,
+  smtRoot,
+  mmrRoot,
+  timestamp
+}
+
+- broadcast via gossip layer
+
+---
+
+# 11. NODE IDENTITY
+
+Each node MUST generate:
+
+- uuid nodeId
+- ephemeral key placeholder (future upgrade to Ed25519)
+
+Store in memory on startup.
+
+---
+
+# 12. DEDUPLICATION SYSTEM
+
+Maintain:
+
+Set processedMessages = new Set()
+
+If message hash exists:
+  ignore message
+
+Else:
+  process and store hash
+
+---
+
+# 13. FAILURE HANDLING
+
+If peer disconnects:
+- remove from peer list
+
+If invalid state detected:
+- request resync from peers
+- prefer longest valid proof chain
+
+---
+
+# 14. BOOT SEQUENCE
+
+On startup:
+
+PRINT:
+"NDAP DISTRIBUTED NODE STARTED"
+
+THEN:
+- start WS server
+- connect to peers
+- initiate sync process
+- attach to existing API server
+
+---
+
+# 15. ENV CONFIG
+
+Support:
+
+PORT=3001
+PEERS=ws://localhost:3002,ws://localhost:3003
+NODE_ID=auto-generated
+
+---
+
+# 16. INTEGRATION REQUIREMENT
+
+This network layer MUST integrate with:
+
+- existing SMT module
+- existing MMR module
+- existing transaction system
+- Rust engine (if present)
+
+---
+
+# 17. FINAL SYSTEM BEHAVIOR
+
+After this scaffold:
+
+System becomes:
+
+- multi-node WebSocket mesh
+- gossip-based propagation network
+- state-synced distributed ledger
+- cryptographically verifiable state replication system (when Rust + SMT fully active)
+
+---
+
+# END OF INSTRUCTIONS

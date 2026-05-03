@@ -31,6 +31,7 @@ async function main() {
   await require('./ipfs.test')(test, suite, assert);
   await require('./engine.test')(test, suite, assert);
   await require('./zk.test')(test, suite, assert);
+  await require('./network.test')(test, suite, assert);
 
   console.log(`\n=== RESULTS: ${passed} passed, ${failed} failed ===`);
   if (failures.length > 0) {

@@ -6,6 +6,7 @@ const { generateDID } = require('./src/did');
 const { zkPipeline } = require('./src/zk');
 const { canonicalHash } = require('./src/ipfs');
 const { randomHex } = require('./src/utils');
+const { initNetwork } = require('./src/network/index');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,6 +15,11 @@ app.use(bodyParser.json({ limit: '1mb' }));
 
 const engine = new Engine();
 
+console.log('NDAP ENTERPRISE CORE ACTIVE');
+console.log('NDAP DISTRIBUTED NODE STARTED');
+
+const network = initNetwork(engine);
+
 app.post('/data', async (req, res) => {
   try {
     const { data, owner } = req.body;
@@ -21,14 +27,20 @@ app.post('/data', async (req, res) => {
     if (!owner) return res.status(400).json({ error: 'owner is required' });
 
     const assetId = canonicalHash(data);
-    const result = await engine.register_asset(assetId, owner, data);
+    const result  = await engine.register_asset(assetId, owner, data);
+
+    const smtRoot = engine.compute_state_root();
+    const mmrRoot = engine.get_mmr_root();
+    network.broadcastStateUpdate(smtRoot, mmrRoot);
 
     return res.json({
-      key: assetId,
-      cid: result.cid,
-      root: result.root,
+      key:      assetId,
+      cid:      result.cid,
+      root:     result.root,
       logIndex: result.logEntry.index,
-      mmrRoot: engine.get_mmr_root(),
+      mmrRoot,
+      nodeId:   network.nodeId(),
+      peers:    network.peerCount(),
     });
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -47,8 +59,8 @@ app.post('/transfer', async (req, res) => {
       fromDID,
       toDID,
       assetId,
-      amount: amount || 0,
-      nonce: nonce || randomHex(8),
+      amount:    amount || 0,
+      nonce:     nonce || randomHex(8),
       timestamp: Date.now(),
     });
 
@@ -59,15 +71,22 @@ app.post('/transfer', async (req, res) => {
 
     const transition = engine.apply_transaction(tx);
 
+    const smtRoot = engine.compute_state_root();
+    const mmrRoot = engine.get_mmr_root();
+    network.broadcastStateUpdate(smtRoot, mmrRoot);
+    network.broadcastTransaction(tx, transition.txHash);
+
     return res.json({
-      success: true,
+      success:  true,
       tx,
       prevRoot: transition.prevRoot,
-      newRoot: transition.newRoot,
-      txHash: transition.txHash,
+      newRoot:  transition.newRoot,
+      txHash:   transition.txHash,
       logIndex: transition.logEntry.index,
-      mmrRoot: engine.get_mmr_root(),
-      zkProof: zkResult.proof.proof,
+      mmrRoot,
+      zkProof:  zkResult.proof.proof,
+      nodeId:   network.nodeId(),
+      peers:    network.peerCount(),
     });
   } catch (err) {
     return res.status(err.message.includes('rejected') ? 403 : 500).json({ error: err.message });
@@ -79,7 +98,7 @@ app.post('/verify', (req, res) => {
     const { key, proof: clientProof } = req.body;
     if (!key) return res.status(400).json({ error: 'key is required' });
 
-    const smtProof = engine.get_proof(key);
+    const smtProof  = engine.get_proof(key);
     const proofValid = engine.verify_proof(smtProof);
 
     let txValid = null;
@@ -88,7 +107,7 @@ app.post('/verify', (req, res) => {
     }
 
     return res.json({
-      valid: proofValid && (txValid === null || txValid),
+      valid:     proofValid && (txValid === null || txValid),
       smtProof,
       stateRoot: engine.compute_state_root(),
     });
@@ -99,11 +118,11 @@ app.post('/verify', (req, res) => {
 
 app.get('/log', (req, res) => {
   try {
-    const log = engine.get_log();
+    const log       = engine.get_log();
     const integrity = engine.verify_log_integrity();
     return res.json({
       log,
-      count: log.length,
+      count:   log.length,
       mmrRoot: engine.get_mmr_root(),
       integrity,
     });
@@ -114,14 +133,25 @@ app.get('/log', (req, res) => {
 
 app.get('/snapshot', (req, res) => {
   try {
-    return res.json(engine.snapshot());
+    return res.json({
+      ...engine.snapshot(),
+      nodeId: network.nodeId(),
+      peers:  network.peerCount(),
+    });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
 });
 
+app.get('/peers', (req, res) => {
+  return res.json({
+    nodeId:   network.nodeId(),
+    peers:    network.peerCount(),
+    gossipSeen: null,
+  });
+});
+
 app.listen(PORT, () => {
-  console.log('NDAP ENTERPRISE CORE ACTIVE');
   console.log(`NeoGrid VDAP v2 running on port ${PORT} | Rust engine: ${engine.rustAvailable()}`);
 });
 

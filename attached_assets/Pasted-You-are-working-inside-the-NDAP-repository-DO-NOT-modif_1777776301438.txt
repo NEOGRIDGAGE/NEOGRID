@@ -1,0 +1,208 @@
+You are working inside the NDAP repository.
+
+DO NOT modify consensus, Rust core, SMT/MMR, or simulator.
+
+THIS TASK DEFINES NDAP CLOUD v1 GO-TO-MARKET + PRICING + ECOSYSTEM STRUCTURE.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Design a full production-ready launch framework for:
+
+NDAP Cloud (the monetized infrastructure layer of NDAP)
+
+Including:
+- pricing model
+- tier structure
+- product packaging
+- developer onboarding
+- enterprise positioning
+- ecosystem rollout strategy
+
+------------------------------------------------------------
+STEP 1 — CREATE CLOUD PRODUCT STRUCTURE
+
+Create:
+
+/ndap-cloud/
+
+Inside:
+
+/pricing/
+/tiers/
+/docs/
+/go-to-market/
+/developer-onboarding/
+/enterprise/
+
+------------------------------------------------------------
+STEP 2 — PRICING MODEL (BASELINE)
+
+Create:
+
+/ndap-cloud/pricing/pricing-model.json
+
+Define pricing units:
+
+ENDPOINT COSTS:
+- /data = 1 unit
+- /transfer = 3 units
+- /verify = 0.5 units
+- /log = 0.2 units
+
+STORAGE:
+- IPFS upload = 2 units per MB equivalent
+- state snapshot = 1 unit
+
+CONSENSUS OPS:
+- BFT round participation = 5 units (enterprise only)
+- finalization proof = 10 units
+
+------------------------------------------------------------
+STEP 3 — TIERS DEFINITION
+
+Create:
+
+/ndap-cloud/tiers/tiers.json
+
+Define:
+
+FREE:
+- 10,000 units/month
+- no SLA
+- rate limited heavily
+
+PRO:
+- 1,000,000 units/month
+- priority queue access
+- moderate SLA
+
+ENTERPRISE:
+- custom usage
+- SLA guarantees
+- validator access
+- private network deployment
+
+------------------------------------------------------------
+STEP 4 — PRODUCT PACKAGING
+
+Create:
+
+/ndap-cloud/go-to-market/products.md
+
+Define NDAP Cloud as:
+
+1. NDAP API (developer access layer)
+2. NDAP Compute (Rust execution engine usage)
+3. NDAP Storage (IPFS + state history)
+4. NDAP Consensus (enterprise validation layer)
+
+Explain clearly:
+- what each product does
+- who it is for
+- why it matters
+
+------------------------------------------------------------
+STEP 5 — DEVELOPER ONBOARDING FLOW
+
+Create:
+
+/ndap-cloud/developer-onboarding/flow.md
+
+Include:
+
+Step 1:
+- sign up → API key
+
+Step 2:
+- choose tier
+
+Step 3:
+- receive sandbox access
+
+Step 4:
+- make first /transfer call
+
+Step 5:
+- view usage dashboard
+
+Step 6:
+- upgrade to PRO when scaling
+
+------------------------------------------------------------
+STEP 6 — ENTERPRISE POSITIONING
+
+Create:
+
+/ndap-cloud/enterprise/positioning.md
+
+Define enterprise use cases:
+
+- financial settlement systems
+- supply chain asset tracking
+- audit-proof data logs
+- inter-organizational asset transfer
+- compliance verification systems
+
+Highlight:
+- Byzantine fault tolerance
+- deterministic finality
+- cryptographic audit trails
+
+------------------------------------------------------------
+STEP 7 — GO-TO-MARKET STRATEGY
+
+Create:
+
+/ndap-cloud/go-to-market/strategy.md
+
+Include:
+
+PHASE 1 — DEVELOPER ADOPTION
+- free tier expansion
+- SDK release
+- GitHub ecosystem onboarding
+
+PHASE 2 — PRO USER MONETIZATION
+- usage-based billing
+- API scaling limits
+- performance tiers
+
+PHASE 3 — ENTERPRISE SALES
+- private deployments
+- validator networks
+- SLA contracts
+
+PHASE 4 — INFRASTRUCTURE SCALE
+- distributed NDAP nodes
+- global API endpoints
+- partner integrations
+
+------------------------------------------------------------
+STEP 8 — POSITIONING STATEMENT
+
+Define NDAP Cloud as:
+
+"A verifiable decentralized infrastructure layer for asset state, consensus, and cryptographic execution."
+
+------------------------------------------------------------
+FINAL RESULT
+
+After this system:
+
+✔ NDAP becomes a cloud infrastructure product
+✔ monetization is structured and scalable
+✔ developers can onboard independently
+✔ enterprise use cases are clearly defined
+✔ ecosystem expansion is guided, not chaotic
+
+------------------------------------------------------------
+IMPORTANT RULE
+
+DO NOT modify protocol logic.
+
+THIS IS PURE PRODUCTIZATION + BUSINESS LAYER DESIGN.
+
+------------------------------------------------------------
+END

@@ -1,0 +1,1 @@
+{"FREE":{"monthlyUnits":10000,"sla":false,"rateLimit":"heavy"},"PRO":{"monthlyUnits":1000000,"sla":"moderate","priorityQueue":true},"ENTERPRISE":{"monthlyUnits":"custom","sla":true,"validatorAccess":true,"privateNetworkDeployment":true}}

@@ -1,0 +1,1 @@
+NDAP Cloud is a verifiable decentralized infrastructure layer for asset state, consensus, and cryptographic execution.

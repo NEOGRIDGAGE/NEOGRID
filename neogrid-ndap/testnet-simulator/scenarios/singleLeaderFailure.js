@@ -44,8 +44,9 @@ async function singleRun({ nodeCount, runMode }) {
   const model = new ModelChecker();
   const modelResult = model.simulate([{ finalized: allNodes.flatMap((n) => n.finalized), quorumThreshold: 1, stateRoot: 'good-root', inputs: { run: 'singleLeaderFailure' }, validatorSet: vs.getAll() }]);
   const pass = checker.passed() && modelResult.ok;
+  const protocolTrace = [{ round: 0, event: { type: 'PROPOSE', height: 0, smtRoot: 'good-root', mmrRoot: 'good-mmr', validatorSet: vs.getAll() }, stateBefore: { height: 0, view: 0, validatorSet: vs.getAll(), smtRoot: null, mmrRoot: null, finalizedStateRoot: null }, stateAfter: { height: 0, view: 0, validatorSet: vs.getAll(), smtRoot: 'good-root', mmrRoot: 'good-mmr', finalizedStateRoot: null }, signatures: [] }];
   const histogram = histogramFromRuns([Date.now() - start]);
-  return { scenario: 'singleLeaderFailure', pass, detail: pass ? 'adaptive adversary contained' : checker.summary(), convergenceMs: Date.now() - start, successRate: pass ? 100 : 0, failureDistribution: pass ? {} : { safety: 1 }, convergenceHistogram: histogram, worstCaseTrace: modelResult.trace, quorumStabilityScore: 100, finalitySuccessRate: pass ? 100 : 0 };
+  return { scenario: 'singleLeaderFailure', pass, detail: pass ? 'adaptive adversary contained' : checker.summary(), convergenceMs: Date.now() - start, successRate: pass ? 100 : 0, failureDistribution: pass ? {} : { safety: 1 }, convergenceHistogram: histogram, worstCaseTrace: modelResult.trace, protocolTrace, quorumStabilityScore: 100, finalitySuccessRate: pass ? 100 : 0 };
 }
 
 function summarize(scenario, runs) {
@@ -60,6 +61,7 @@ function summarize(scenario, runs) {
     failureDistribution: failureCounts(runs),
     convergenceHistogram: histogramFromRuns(runs.map((r) => r.convergenceMs || 0)),
     worstCasePathTrace: runs.reduce((a, b) => (a.convergenceMs || 0) > (b.convergenceMs || 0) ? a : b, runs[0]).worstCaseTrace || [],
+    protocolTrace: runs.reduce((a, b) => (a.convergenceMs || 0) > (b.convergenceMs || 0) ? a : b, runs[0]).protocolTrace || [],
     quorumStabilityScore: summary.convergenceStability,
     finalitySuccessRate: summary.finalitySuccessRate,
     failureClassification: summary.failureClassification,

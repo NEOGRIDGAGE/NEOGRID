@@ -11,6 +11,7 @@ const { resilienceScore, mean, variance } = require('./metrics/resilienceScore')
 const { classifyFailure } = require('./analysis/failureClassifier');
 const { generateReport } = require('./report/generateReport');
 const { ModelChecker } = require('./formal/modelChecker');
+const { verifyTrace } = require('../core/formal/traceVerifier');
 
 const runMode = process.env.RUN_MODE || 'small';
 const iterations = Number(process.env.ITERATIONS || config.defaultRunsPerScenario);
@@ -29,11 +30,12 @@ async function main() {
 
   for (const scenario of scenarios) {
     const result = await scenario.fn({ iterations, nodeCount, runMode });
-    const trace = result.worstCasePathTrace || [];
+    const trace = result.protocolTrace || result.worstCasePathTrace || [];
+    const traceCheck = verifyTrace(trace);
     const model = modelChecker.simulate(Array.isArray(trace) ? trace : []);
     const values = Array.isArray(result.runs) ? result.runs.map((r) => r.convergenceMs || 0) : [];
     const convergenceStats = { mean: mean(values), variance: variance(values) };
-    const invariantViolations = model.violations.length + (result.failureDistribution ? Object.keys(result.failureDistribution).length : 0);
+    const invariantViolations = model.violations.length + (traceCheck === true ? 0 : 1);
     const score = resilienceScore({
       runs: result.runs || [],
       invariantViolations,
@@ -44,6 +46,7 @@ async function main() {
       ...(result.failureDistribution ? Object.keys(result.failureDistribution) : []),
       classifyFailure({ pass: result.pass, detail: result.detail }),
       ...(model.violations || []).map((v) => v.name),
+      traceCheck === true ? null : 'TRACE_VERIFICATION_FAILURE',
     ].filter(Boolean)));
     const report = generateReport({
       runs: result.runs || [],
@@ -66,6 +69,7 @@ async function main() {
       convergenceStats,
       failureModes,
       invariantViolations,
+      protocolTrace: trace,
       report,
     });
   }

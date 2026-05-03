@@ -1,0 +1,207 @@
+You are working inside the NDAP repository.
+
+DO NOT modify existing consensus implementation or simulator behavior.
+
+You are now adding the FINAL CRITICAL MISSING LAYER:
+
+NDAP Protocol Specification + Formalization Layer v1.0
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Transform NDAP from:
+
+"implemented distributed system + simulator"
+
+into:
+
+"formally specified distributed consensus protocol with explicit state machine, adversary model, and execution rules"
+
+------------------------------------------------------------
+STEP 1 — CREATE FORMAL PROTOCOL SPECIFICATION CORE
+
+Create:
+
+/docs/formal/ndap-spec.md
+
+Define:
+
+1. SYSTEM MODEL
+- nodes = deterministic state machines
+- network = asynchronous, unreliable, adversarial
+- messages = signed, ordered per sender but not globally ordered
+
+2. TRUST MODEL
+- Byzantine nodes exist
+- up to 1/3 can be malicious
+- signatures required for all consensus messages
+
+3. STATE MODEL
+Define canonical state:
+
+State = {
+  height,
+  view,
+  validatorSet,
+  smtRoot,
+  mmrRoot,
+  finalizedStateRoot
+}
+
+------------------------------------------------------------
+STEP 2 — FORMAL STATE TRANSITION FUNCTION
+
+Create:
+
+/core/formal/stateTransition.js
+
+Define PURE FUNCTION:
+
+nextState(state, event) → state
+
+Events:
+- PROPOSE
+- PREVOTE
+- PRECOMMIT
+- FINALIZE
+- TIMEOUT
+- VIEW_CHANGE
+
+REQUIREMENTS:
+- function must be deterministic
+- no external dependencies
+- same input ALWAYS produces same output
+
+------------------------------------------------------------
+STEP 3 — EXPLICIT ADVERSARY MODEL
+
+Create:
+
+/core/formal/adversaryModel.js
+
+Define adversary constraints:
+
+Allowed:
+- message delay
+- message reorder
+- message drop
+- equivocation attempts
+- fake message injection (must fail signature validation)
+
+NOT allowed:
+- breaking cryptographic primitives
+- forging valid signatures
+
+Define adversary formally as:
+
+Adversary = probabilistic scheduler controlling message delivery
+
+------------------------------------------------------------
+STEP 4 — CANONICAL EXECUTION RULES
+
+Create:
+
+/core/formal/executionRules.js
+
+Define strict rules:
+
+1. No two conflicting FINALIZED states allowed at same height
+2. A state is FINAL only if ≥ 2/3 weighted quorum
+3. Validator set must be identical across honest nodes per epoch
+4. State transitions must be deterministic given ordered event set
+
+------------------------------------------------------------
+STEP 5 — INVARIANT SPECIFICATION LAYER
+
+Create:
+
+/core/formal/invariants.js
+
+Define machine-readable invariants:
+
+SafetyInvariant:
+  ∀ height: not exists (stateA != stateB where both finalized)
+
+LivenessInvariant:
+  ∃ t: all honest nodes eventually reach FINALIZED state
+
+DeterminismInvariant:
+  identical event logs → identical final state
+
+QuorumInvariant:
+  finalize only if sum(votes) ≥ 2/3 total weight
+
+------------------------------------------------------------
+STEP 6 — PROTOCOL TRACE FORMAT
+
+Create:
+
+/core/formal/protocolTrace.js
+
+Define canonical trace format:
+
+Trace = [
+  { round, event, stateBefore, stateAfter, signatures }
+]
+
+Must be:
+- append-only
+- deterministic ordering
+- replayable
+
+------------------------------------------------------------
+STEP 7 — TRACE VERIFIER
+
+Create:
+
+/core/formal/traceVerifier.js
+
+Function:
+
+verifyTrace(trace) → boolean
+
+Checks:
+- all state transitions valid
+- invariants hold at every step
+- no invalid quorum transitions
+- no double-finalization
+
+If failure:
+→ return exact failing transition index
+
+------------------------------------------------------------
+STEP 8 — INTEGRATION WITH TESTNET SIMULATOR
+
+Modify ONLY integration layer:
+
+/testnet-simulator/
+
+Add:
+- ability to export full protocolTrace per run
+- feed trace into traceVerifier after each simulation
+- mark run FAIL if traceVerifier fails
+
+------------------------------------------------------------
+FINAL SYSTEM REQUIREMENT
+
+After this upgrade, NDAP must be able to:
+
+✔ Define itself formally
+✔ Validate execution traces
+✔ Prove internal consistency per run
+✔ Separate implementation from specification
+✔ Support external re-implementation by spec alone
+
+------------------------------------------------------------
+IMPORTANT RULE
+
+DO NOT:
+- change BFT implementation
+- modify SMT/MMR logic
+- alter network simulator behavior
+
+ONLY ADD FORMAL SPECIFICATION + VERIFICATION LAYER
+
+------------------------------------------------------------
+END

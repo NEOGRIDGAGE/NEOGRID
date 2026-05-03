@@ -18,6 +18,7 @@ async function run({ iterations = 20, nodeCount = 25, runMode = 'medium' } = {})
     failureDistribution: failureCounts(runs),
     convergenceHistogram: histogramFromRuns(runs.map((r) => r.convergenceMs || 0)),
     worstCasePathTrace: runs.reduce((a, b) => (a.convergenceMs || 0) > (b.convergenceMs || 0) ? a : b, runs[0]).worstCaseTrace || [],
+    protocolTrace: runs.reduce((a, b) => (a.convergenceMs || 0) > (b.convergenceMs || 0) ? a : b, runs[0]).protocolTrace || [],
     quorumStabilityScore: summary.convergenceStability,
     finalitySuccessRate: summary.finalitySuccessRate,
     failureClassification: summary.failureClassification,
@@ -52,7 +53,8 @@ async function singleRun({ nodeCount }) {
   const checker = new ProtocolChecker();
   checker.checkAll(nodes);
   const pass = checker.passed();
-  return { scenario: 'delayedFinality', pass, detail: pass ? 'eventual convergence under delay' : checker.summary(), convergenceMs: Date.now() - start, failureClassification: pass ? null : 'stability', worstCaseTrace: nodes.flatMap((n) => n.getLog()) };
+  const protocolTrace = [{ round: 0, event: { type: 'TIMEOUT', height: 0 }, stateBefore: { height: 0, view: 0, validatorSet: vs.getAll(), smtRoot: null, mmrRoot: null, finalizedStateRoot: null }, stateAfter: { height: 0, view: 1, validatorSet: vs.getAll(), smtRoot: null, mmrRoot: null, finalizedStateRoot: null }, signatures: [] }];
+  return { scenario: 'delayedFinality', pass, detail: pass ? 'eventual convergence under delay' : checker.summary(), convergenceMs: Date.now() - start, failureClassification: pass ? null : 'stability', worstCaseTrace: nodes.flatMap((n) => n.getLog()), protocolTrace };
 }
 
 function failureCounts(runs) { const out = {}; for (const r of runs) if (!r.pass) out[r.failureClassification || 'unknown'] = (out[r.failureClassification || 'unknown'] || 0) + 1; return out; }

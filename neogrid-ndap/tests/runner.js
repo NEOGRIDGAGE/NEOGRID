@@ -33,6 +33,11 @@ async function main() {
   await require('./zk.test')(test, suite, assert);
   await require('./network.test')(test, suite, assert);
   await require('./consensus.test')(test, suite, assert);
+  await require('./invariants.test')(test, suite, assert);
+  await require('./adversarial/malicious-leader.test')(test, suite, assert);
+  await require('./adversarial/delayed-messages.test')(test, suite, assert);
+  await require('./adversarial/equivocation.test')(test, suite, assert);
+  await require('./adversarial/partition.test')(test, suite, assert);
 
   console.log(`\n=== RESULTS: ${passed} passed, ${failed} failed ===`);
   if (failures.length > 0) {

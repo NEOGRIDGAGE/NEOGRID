@@ -1,0 +1,237 @@
+You are working inside an existing repository called NEOGRID (NDAP / BFT distributed consensus system).
+
+Your task is NOT to add experimental features.
+
+Your task is to HARDEN and COMPLETE the system into a production-grade distributed consensus core.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Refactor and extend the system into:
+
+NDAP Production Core v1.1
+
+A deterministic, Byzantine Fault Tolerant consensus system with:
+- formal invariants
+- explicit protocol state machine boundaries
+- adversarial simulation harness
+- runtime safety enforcement guards
+- structured observability layer
+
+------------------------------------------------------------
+CRITICAL CONSTRAINTS
+------------------------------------------------------------
+
+DO NOT:
+- add new consensus algorithms
+- add new cryptographic schemes
+- replace SMT/MMR architecture
+- redesign BFT phases
+
+ONLY:
+- formalize
+- enforce
+- validate
+- simulate adversarial behavior
+- add safety boundaries
+
+------------------------------------------------------------
+STEP 1 — CREATE FORMAL SPEC LAYER
+------------------------------------------------------------
+
+Create folder:
+
+/spec/
+
+Add:
+
+1. protocol-invariants.md
+   MUST DEFINE:
+   - Safety Invariant: no two conflicting FINALIZED_STATE at same height
+   - Liveness Invariant: eventual finality under partial synchrony
+   - Determinism Invariant: identical inputs produce identical stateRoot
+   - Validator Consistency Invariant: all nodes agree on validator set per epoch
+
+2. network-model.md
+   MUST DEFINE:
+   - partial synchrony assumption
+   - message delay tolerance
+   - partition behavior rules
+   - adversarial model (Byzantine up to f < n/3 weighted)
+
+3. state-machine.md
+   MUST DEFINE:
+   - PROPOSE → PREVOTE → PRECOMMIT → FINALIZE transitions
+   - VIEW_CHANGE transitions
+   - allowed / disallowed transitions explicitly
+
+------------------------------------------------------------
+STEP 2 — ADD RUNTIME INVARIANT ENFORCEMENT LAYER
+------------------------------------------------------------
+
+Create:
+
+/src/core/invariants.js
+
+Implement runtime checks:
+
+- assertNoDoubleFinalization(height, stateRoot)
+- assertSMTMatchesMMR(state)
+- assertValidQuorum(votes, totalWeight)
+- assertValidStateTransition(prevState, nextState)
+- assertValidatorSetConsistency(epoch, validators)
+
+These MUST be called inside BFT engine BEFORE finalization.
+
+If any invariant fails:
+- throw HARD ERROR
+- reject state transition
+
+------------------------------------------------------------
+STEP 3 — ADD ADVERSARIAL SIMULATION LAYER
+------------------------------------------------------------
+
+Create:
+
+/tests/adversarial/
+
+Add simulation tools:
+
+1. malicious-leader.test.js
+   - leader sends conflicting proposals
+
+2. delayed-messages.test.js
+   - simulate network lag + reordered votes
+
+3. equivocation.test.js
+   - validator double-votes in same height
+
+4. partition.test.js
+   - split network into 2 groups and test reconciliation
+
+All tests must validate:
+- no double finality occurs
+- eventual convergence after partition heals
+- invalid votes are rejected deterministically
+
+------------------------------------------------------------
+STEP 4 — ADD CONSENSUS OBSERVABILITY LAYER
+------------------------------------------------------------
+
+Create:
+
+/src/observability/
+
+Add:
+
+1. consensus-tracer.js
+   - logs every phase transition
+   - logs vote lineage per height
+
+2. state-graph.js
+   - builds DAG of state transitions
+
+3. metrics.js
+   - tracks:
+     - time to finality
+     - vote convergence rate
+     - view-change frequency
+     - failed quorum attempts
+
+Expose /metrics endpoint in API
+
+------------------------------------------------------------
+STEP 5 — HARDEN VALIDATOR SET LOGIC
+------------------------------------------------------------
+
+Modify:
+
+/src/consensus/validator.js
+
+Add:
+
+- freezeValidatorSet(epoch)
+- getValidatorSnapshot(height)
+- enforceDeterministicValidatorView()
+
+RULE:
+Validator set MUST be immutable per epoch.
+
+No runtime divergence allowed.
+
+------------------------------------------------------------
+STEP 6 — CONSENSUS ENGINE SAFETY GATES
+------------------------------------------------------------
+
+Modify bft engine:
+
+BEFORE ANY FINALIZATION:
+
+MUST RUN:
+
+1. invariant checks
+2. quorum validation
+3. validator snapshot validation
+4. state determinism check
+
+ONLY THEN allow FINALIZED_STATE
+
+------------------------------------------------------------
+STEP 7 — FORK RESOLUTION RULE (STRICT ADDITION)
+------------------------------------------------------------
+
+Add deterministic rule:
+
+If conflicting FINALIZED_STATE exists during recovery:
+
+SELECT:
+- highest cumulative weight
+- if tie → lowest hash(stateRoot)
+
+This must be documented in /spec/state-machine.md
+
+------------------------------------------------------------
+STEP 8 — FINAL OUTPUT STANDARDIZATION
+------------------------------------------------------------
+
+Every FINALIZED_STATE MUST include:
+
+{
+  height,
+  stateRoot,
+  smtRoot,
+  mmrRoot,
+  commitCert,
+  validatorSnapshotHash,
+  finalized: true
+}
+
+------------------------------------------------------------
+STEP 9 — UPDATE TEST COVERAGE REQUIREMENT
+------------------------------------------------------------
+
+Ensure total test coverage includes:
+
+- invariants.js tests
+- adversarial scenarios
+- validator snapshot consistency
+- fork resolution correctness
+- consensus trace validation
+
+------------------------------------------------------------
+FINAL GOAL
+------------------------------------------------------------
+
+After this upgrade, the system MUST satisfy:
+
+✔ Deterministic BFT finality
+✔ Runtime invariant enforcement
+✔ Adversarial resilience validation
+✔ Validator set consistency per epoch
+✔ Fully traceable consensus lifecycle
+
+------------------------------------------------------------
+DO NOT ADD ANY NEW FEATURES OUTSIDE THIS SCOPE.
+ONLY HARDEN, FORMALIZE, AND VALIDATE EXISTING SYSTEM.
+------------------------------------------------------------

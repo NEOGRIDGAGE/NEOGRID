@@ -9,6 +9,7 @@ const { initNetwork }       = require('./src/network/index');
 const version = require('./src/core/version');
 const { computeCoreHash } = require('./src/core/core-hash');
 const { ConsensusMetrics } = require('./src/observability/metrics');
+const { withMonetization } = require('./src/monetization/middleware');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -23,7 +24,7 @@ console.log('NDAP DISTRIBUTED NODE STARTED');
 
 const network = initNetwork(engine);
 
-app.post('/data', async (req, res) => {
+app.post('/data', withMonetization(async (req, res) => {
   try {
     const { data, owner } = req.body;
     if (!data)  return res.status(400).json({ error: 'data is required' });
@@ -53,9 +54,9 @@ app.post('/data', async (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-});
+}));
 
-app.post('/transfer', async (req, res) => {
+app.post('/transfer', withMonetization(async (req, res) => {
   try {
     const { fromDID, toDID, assetId, amount, nonce, balance } = req.body;
     if (!fromDID || !toDID || !assetId) {
@@ -103,9 +104,9 @@ app.post('/transfer', async (req, res) => {
   } catch (err) {
     return res.status(err.message.includes('rejected') ? 403 : 500).json({ error: err.message });
   }
-});
+}));
 
-app.post('/verify', (req, res) => {
+app.post('/verify', withMonetization((req, res) => {
   try {
     const { key, proof: clientProof } = req.body;
     if (!key) return res.status(400).json({ error: 'key is required' });
@@ -123,9 +124,9 @@ app.post('/verify', (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-});
+}));
 
-app.get('/log', (req, res) => {
+app.get('/log', withMonetization((req, res) => {
   try {
     const log       = engine.get_log();
     const integrity = engine.verify_log_integrity();
@@ -133,7 +134,7 @@ app.get('/log', (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
-});
+}));
 
 app.get('/snapshot', (req, res) => {
   try {

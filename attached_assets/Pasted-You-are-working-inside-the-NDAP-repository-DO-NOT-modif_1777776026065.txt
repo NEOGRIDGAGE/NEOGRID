@@ -1,0 +1,222 @@
+You are working inside the NDAP repository.
+
+DO NOT modify consensus, Rust core logic, or simulator behavior.
+
+THIS TASK ONLY ADDS A MONETIZATION + USAGE METERING LAYER.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Implement a full NDAP Cloud monetization layer including:
+
+- API key authentication
+- request usage tracking
+- endpoint metering
+- tiered access control (free/pro/enterprise)
+- pricing configuration system
+- billing hooks (Stripe-ready structure)
+
+------------------------------------------------------------
+STEP 1 — CREATE MONETIZATION MODULE
+
+Create:
+
+/src/monetization/
+
+Add files:
+
+1. apiKey.js
+2. usageTracker.js
+3. rateLimiter.js
+4. pricing.js
+5. billing.js
+6. tierManager.js
+
+------------------------------------------------------------
+STEP 2 — API KEY SYSTEM
+
+apiKey.js must:
+
+- generate API keys (random + hash)
+- validate API keys on requests
+- map API key → user tier
+- store metadata:
+  - createdAt
+  - tier
+  - usage limits
+
+Functions:
+- createApiKey(userId, tier)
+- validateApiKey(key)
+- revokeApiKey(key)
+
+------------------------------------------------------------
+STEP 3 — USAGE TRACKER (CORE METERING)
+
+usageTracker.js must:
+
+Track per API key:
+- request count
+- endpoint usage (/data, /transfer, /verify, /log)
+- compute operations (future Rust integration)
+- storage usage (IPFS hooks placeholder)
+
+Functions:
+- recordUsage(apiKey, endpoint, costUnits)
+- getUsage(apiKey)
+- resetUsage(apiKey)
+
+------------------------------------------------------------
+STEP 4 — RATE LIMITING LAYER
+
+rateLimiter.js must:
+
+- enforce per-tier limits
+- block requests exceeding quota
+- support sliding window counters
+
+Tiers:
+
+FREE:
+- low request limits
+
+PRO:
+- medium limits
+
+ENTERPRISE:
+- high / custom limits
+
+Functions:
+- checkLimit(apiKey, endpoint)
+- applyThrottle()
+
+------------------------------------------------------------
+STEP 5 — PRICING ENGINE
+
+pricing.js must define:
+
+Default pricing model:
+
+- /data = 1 unit
+- /transfer = 3 units
+- /verify = 0.5 units
+- /log = 0.2 units
+
+Include:
+- tier multipliers
+- future dynamic pricing hooks
+
+Functions:
+- calculateCost(endpoint, tier)
+- getTierPricing(tier)
+
+------------------------------------------------------------
+STEP 6 — TIER MANAGEMENT SYSTEM
+
+tierManager.js must:
+
+Define tiers:
+
+FREE:
+- limited usage
+- no SLA
+
+PRO:
+- higher limits
+- faster processing priority
+
+ENTERPRISE:
+- unlimited or custom
+- SLA hooks enabled
+
+Functions:
+- getTier(apiKey)
+- upgradeTier(apiKey, newTier)
+
+------------------------------------------------------------
+STEP 7 — BILLING LAYER (STRIPE READY)
+
+billing.js must:
+
+- accumulate usage cost per API key
+- generate invoice objects
+- export Stripe-compatible payload structure
+
+Functions:
+- generateInvoice(apiKey)
+- calculateBill(apiKey)
+- exportStripePayload(invoice)
+
+DO NOT integrate real Stripe yet — only structure hooks.
+
+------------------------------------------------------------
+STEP 8 — INTEGRATE INTO EXISTING API
+
+Modify ONLY request middleware in index.js:
+
+For every endpoint (/data, /transfer, /verify, /log):
+
+BEFORE execution:
+- validate API key
+- check rate limit
+- record usage start
+
+AFTER execution:
+- record usage cost
+- update billing tracker
+
+Reject requests if:
+- invalid API key
+- rate limit exceeded
+
+------------------------------------------------------------
+STEP 9 — ADD MIDDLEWARE WRAPPER
+
+Create:
+
+/src/monetization/middleware.js
+
+This must wrap all API endpoints:
+
+function withMonetization(handler) {
+  return async (req, res) => {
+    validate API key
+    check rate limits
+    execute handler
+    record usage
+  }
+}
+
+------------------------------------------------------------
+STEP 10 — DEFAULT DEV MODE
+
+If no API key provided:
+- treat as FREE tier
+- heavily rate limited
+- log as anonymous usage
+
+------------------------------------------------------------
+FINAL RESULT
+
+After this system:
+
+✔ NDAP becomes monetizable infrastructure
+✔ API usage becomes measurable
+✔ tiers control access
+✔ billing system is ready for Stripe integration
+✔ protocol core remains untouched
+
+------------------------------------------------------------
+IMPORTANT RULES
+
+DO NOT:
+- modify consensus engine
+- modify SMT/MMR logic
+- modify Rust core
+- modify simulator behavior
+
+ONLY ADD MONETIZATION LAYER ABOVE EXISTING SYSTEM.
+
+------------------------------------------------------------
+END

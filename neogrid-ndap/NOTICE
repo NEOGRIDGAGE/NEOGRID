@@ -1,0 +1,17 @@
+NDAP is composed of two layers:
+
+1. NDAP Protocol (Open Source)
+   - consensus engine
+   - state machine
+   - cryptographic verification
+   - distributed protocol specification
+
+2. NDAP Cloud (Commercial Infrastructure)
+   - API gateway
+   - usage tracking
+   - billing system
+   - hosted validator services
+
+The protocol is open.
+The infrastructure is monetized.
+Implementations must respect this separation.

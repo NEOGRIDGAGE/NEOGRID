@@ -1,0 +1,21 @@
+NDAP COMMERCIAL LICENSE
+
+This license applies ONLY to:
+- NDAP API Gateway (monetized layer)
+- usage metering system
+- billing system
+- hosted validator infrastructure
+- NDAP Cloud services
+
+USAGE RESTRICTIONS:
+- Cannot deploy NDAP Cloud API commercially without license
+- Hosted infrastructure requires commercial agreement
+- Enterprise validator participation requires contract
+
+PERMITTED USE:
+- internal testing
+- non-production development
+- research use
+
+COMMERCIAL USE:
+- requires NDAP Cloud license agreement

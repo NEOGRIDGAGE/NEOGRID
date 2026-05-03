@@ -1,0 +1,169 @@
+You are working inside the NDAP repository.
+
+THIS TASK DEFINES THE LEGAL + LICENSING STRUCTURE FOR NDAP.
+
+DO NOT modify protocol logic, consensus, or core implementation.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Implement a dual-licensing structure for NDAP that separates:
+
+1. OPEN PROTOCOL LAYER (free, open-source, community driven)
+2. COMMERCIAL INFRASTRUCTURE LAYER (NDAP Cloud monetization system)
+
+This enables:
+- open adoption of NDAP protocol
+- commercial revenue from infrastructure services
+- enterprise-safe usage licensing
+
+------------------------------------------------------------
+STEP 1 — CREATE LICENSE STRUCTURE
+
+At repository root, create:
+
+/LICENSE
+/COMMERCIAL_LICENSE.txt
+/NOTICE
+
+------------------------------------------------------------
+STEP 2 — OPEN PROTOCOL LICENSE (LICENSE FILE)
+
+Create /LICENSE with:
+
+Apache License 2.0
+
+Applies to:
+- NDAP protocol specification
+- reference implementation (core engine)
+- SMT/MMR/BFT logic
+- client libraries
+- simulator (research use only)
+
+Key clause:
+"This software is provided under the Apache License 2.0 for protocol-level usage and implementation."
+
+------------------------------------------------------------
+STEP 3 — COMMERCIAL LICENSE (NDAP CLOUD)
+
+Create /COMMERCIAL_LICENSE.txt
+
+This applies ONLY to:
+
+- NDAP API Gateway (monetized layer)
+- usage metering system
+- billing system
+- hosted validator infrastructure
+- NDAP Cloud services
+
+Define:
+
+USAGE RESTRICTIONS:
+- Cannot deploy NDAP Cloud API commercially without license
+- Hosted infrastructure requires commercial agreement
+- Enterprise validator participation requires contract
+
+PERMITTED USE:
+- internal testing
+- non-production development
+- research use
+
+COMMERCIAL USE:
+- requires NDAP Cloud license agreement
+
+------------------------------------------------------------
+STEP 4 — NOTICE FILE
+
+Create /NOTICE:
+
+Include:
+
+NDAP is composed of two layers:
+
+1. NDAP Protocol (Open Source)
+   - consensus engine
+   - state machine
+   - cryptographic verification
+   - distributed protocol specification
+
+2. NDAP Cloud (Commercial Infrastructure)
+   - API gateway
+   - usage tracking
+   - billing system
+   - hosted validator services
+
+Explain clearly:
+- protocol is open
+- infrastructure is monetized
+- implementations must respect separation
+
+------------------------------------------------------------
+STEP 5 — README UPDATE (IMPORTANT)
+
+Update README.md to include:
+
+SECTION: LICENSE MODEL
+
+NDAP operates under a dual-licensing structure:
+
+- NDAP Protocol Layer: Apache 2.0 (fully open)
+- NDAP Cloud Infrastructure: Commercial license required
+
+State clearly:
+- developers can freely build on protocol
+- hosted services are monetized
+- enterprise deployments require commercial agreement
+
+------------------------------------------------------------
+STEP 6 — CODEBASE TAGGING (IMPORTANT FOR CLARITY)
+
+In code comments (non-functional), add:
+
+/**
+ * NDAP Protocol Layer (Open Source - Apache 2.0)
+ */
+
+/**
+ * NDAP Cloud Infrastructure Layer (Commercial License Required)
+ */
+
+Apply only to:
+- API gateway
+- monetization modules
+- billing system
+
+DO NOT modify core consensus logic comments.
+
+------------------------------------------------------------
+STEP 7 — SEPARATION GUARANTEE
+
+Ensure:
+
+✔ protocol code is fully usable without cloud layer
+✔ cloud layer depends on protocol but not vice versa
+✔ no runtime dependency enforces licensing
+✔ separation is architectural, not technical blocking
+
+------------------------------------------------------------
+FINAL RESULT
+
+After this setup:
+
+✔ NDAP protocol remains open and adoptable
+✔ NDAP Cloud becomes monetizable infrastructure
+✔ enterprises can legally integrate NDAP
+✔ ecosystem can grow without licensing friction
+✔ revenue model is clearly separated from protocol layer
+
+------------------------------------------------------------
+IMPORTANT RULE
+
+DO NOT break protocol openness.
+
+DO NOT lock core consensus or state machine.
+
+ONLY separate legal + commercial boundaries.
+
+------------------------------------------------------------
+END

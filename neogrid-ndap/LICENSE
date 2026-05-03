@@ -1,0 +1,10 @@
+Apache License 2.0
+
+This software is provided under the Apache License 2.0 for protocol-level usage and implementation.
+
+Applies to:
+- NDAP protocol specification
+- reference implementation (core engine)
+- SMT/MMR/BFT logic
+- client libraries
+- simulator (research use only)

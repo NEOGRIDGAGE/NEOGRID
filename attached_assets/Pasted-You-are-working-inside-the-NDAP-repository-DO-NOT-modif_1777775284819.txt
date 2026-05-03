@@ -1,0 +1,174 @@
+You are working inside the NDAP repository.
+
+DO NOT modify protocol logic, consensus engine, or simulator behavior.
+
+THIS IS AN ARCHITECTURAL ORGANIZATION PHASE.
+
+------------------------------------------------------------
+GOAL
+------------------------------------------------------------
+
+Transform NDAP into a public protocol ecosystem with:
+
+1. Canonical specification (Yellow Paper style)
+2. Reference implementation (current NDAP core)
+3. Client architecture support
+4. Conformance test suite
+5. Public ecosystem structure
+
+------------------------------------------------------------
+STEP 1 — CREATE ECOSYSTEM DIRECTORY STRUCTURE
+
+Create:
+
+/ndap-ecosystem/
+
+Inside it create:
+
+/spec/
+/reference-implementation/
+/clients/
+/conformance-tests/
+/docs/
+/examples/
+
+------------------------------------------------------------
+STEP 2 — MOVE SPEC INTO “CANONICAL PROTOCOL SPEC”
+
+Move or create:
+
+/ndap-ecosystem/spec/NDAP_YELLOW_PAPER.md
+
+This is the canonical truth source.
+
+It must include:
+- formal state machine
+- invariants
+- adversary model
+- consensus rules
+- trace model
+
+This becomes the SINGLE SOURCE OF TRUTH.
+
+------------------------------------------------------------
+STEP 3 — DEFINE REFERENCE IMPLEMENTATION ROLE
+
+Create:
+
+/ndap-ecosystem/reference-implementation/README.md
+
+Explain:
+
+- this is the “gold standard implementation”
+- used for validation only
+- NOT the canonical source of truth
+- other clients must match its behavior
+
+Include link to NDAP core engine.
+
+------------------------------------------------------------
+STEP 4 — DEFINE CLIENT ARCHITECTURE STANDARD
+
+Create:
+
+/ndap-ecosystem/clients/CLIENT_SPEC.md
+
+Define:
+
+All NDAP clients must implement:
+
+1. state machine interface:
+   - applyEvent()
+   - getState()
+
+2. networking interface:
+   - sendMessage()
+   - receiveMessage()
+
+3. consensus interface:
+   - propose()
+   - vote()
+   - finalize()
+
+Clients must be interchangeable.
+
+------------------------------------------------------------
+STEP 5 — CREATE CONFORMANCE TEST SUITE
+
+Create:
+
+/ndap-ecosystem/conformance-tests/
+
+Include:
+
+1. trace_replay_test.js
+2. invariants_test.js
+3. adversarial_consistency_test.js
+4. cross_client_state_equivalence_test.js
+
+Each test must:
+- accept any NDAP client implementation
+- run standardized scenario
+- verify identical final state outputs
+
+------------------------------------------------------------
+STEP 6 — CROSS-IMPLEMENTATION VALIDATION MODEL
+
+Define:
+
+A client passes NDAP compliance if:
+
+- identical input trace → identical final state
+- all invariants preserved
+- passes adversarial scenarios
+- matches reference implementation outputs
+
+------------------------------------------------------------
+STEP 7 — EXAMPLES DIRECTORY
+
+Create:
+
+/ndap-ecosystem/examples/
+
+Add:
+
+- minimal-node-client-example.js
+- rust-client-structure.md
+- wasm-client-interface.md
+
+These show how to build a compliant client.
+
+------------------------------------------------------------
+STEP 8 — ECOSYSTEM DOCUMENTATION
+
+Create:
+
+/ndap-ecosystem/docs/ECOSYSTEM_OVERVIEW.md
+
+Explain:
+
+- NDAP is a protocol, not a single implementation
+- reference implementation is canonical behavior model
+- clients are interchangeable
+- conformance tests define correctness
+
+------------------------------------------------------------
+FINAL REQUIREMENT
+
+This must establish NDAP as:
+
+✔ a protocol specification ecosystem
+✔ not a single codebase
+✔ extensible across languages
+✔ verifiable via conformance tests
+✔ structurally similar to Ethereum / IPFS ecosystem design
+
+------------------------------------------------------------
+IMPORTANT RULE
+
+DO NOT change consensus logic or simulator behavior.
+
+ONLY RESTRUCTURE INTO ECOSYSTEM ARCHITECTURE.
+
+------------------------------------------------------------
+END

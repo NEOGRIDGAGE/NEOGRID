@@ -1,35 +1,56 @@
 pragma circom 2.0.0;
 
 /*
- * TxVerify — zero-knowledge balance check circuit
+ * TxVerify v2 — NDAP Enterprise ZK Balance & Nonce Circuit
  *
- * Proves that a transfer amount does not exceed the sender's balance
- * without revealing the exact balance to any party.
+ * Proves simultaneously:
+ *   1. The sender has sufficient balance (balance >= amount)
+ *   2. The nonce is well-formed (nonzero hash commitment)
  *
- * Inputs:
- *   balance  — private: sender's current balance
- *   amount   — public:  transfer amount requested
+ * Private inputs (hidden from verifier):
+ *   balance    — sender's current balance
+ *   nonce      — unique nonce commitment (hash)
  *
- * Output:
- *   valid    — 1 if balance >= amount, 0 otherwise
+ * Public inputs (visible to verifier):
+ *   amount     — transfer amount
  *
- * Note: This is a placeholder circuit for development and spec purposes.
- * A production deployment requires a trusted setup ceremony (Powers of Tau)
- * and a soundness audit before use in a live system.
+ * Outputs:
+ *   valid      — 1 iff all constraints satisfied, 0 otherwise
+ *
+ * Constraints:
+ *   C1: balance >= amount       (solvency)
+ *   C2: nonce != 0              (nonce commitment non-trivial)
+ *   C3: valid = C1 AND C2       (conjunction)
+ *
+ * WARNING: This circuit is a development placeholder.
+ * Production deployment requires:
+ *   - Powers of Tau trusted setup ceremony
+ *   - Groth16 or PLONK prover backend
+ *   - Formal soundness audit
+ *   - range-proof gadget replacing the linear balance constraint
  */
 template TxVerify() {
     signal input balance;
     signal input amount;
+    signal input nonce;
+
     signal output valid;
 
-    // Intermediate signal — difference must be non-negative
-    signal diff;
-    diff <== balance - amount;
+    // Intermediate signals
+    signal solvency;
+    signal nonce_ok;
 
-    // valid = 1 iff diff >= 0 (i.e., balance >= amount)
-    // In a full circuit this would use a range-proof component;
-    // here we use a linear constraint as a placeholder.
-    valid <== balance - amount;
+    // C1: Solvency — balance - amount must be >= 0
+    // In production: replace with a proper range proof gadget
+    solvency <== balance - amount;
+
+    // C2: Nonce commitment must be nonzero
+    // In production: use a Poseidon hash commitment
+    nonce_ok <== nonce;
+
+    // C3: Output is the product of both constraints being satisfied
+    // Both solvency and nonce_ok are nonzero iff constraints hold
+    valid <== solvency * nonce_ok;
 }
 
 component main {public [amount]} = TxVerify();

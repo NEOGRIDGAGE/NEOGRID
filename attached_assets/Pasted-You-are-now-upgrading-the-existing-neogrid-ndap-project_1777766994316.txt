@@ -1,0 +1,300 @@
+You are now upgrading the existing neogrid-ndap project into an Enterprise-Grade Verifiable Distributed Asset Protocol (VDAP v2) with Rust-as-core, real SMT proofs, IPFS state binding, ZK verification pipeline, and formal spec traceability.
+
+You must modify and extend the current codebase. Do NOT rewrite from scratch. Preserve working endpoints and incrementally upgrade architecture.
+
+---
+
+# 1. ARCHITECTURE REFACTOR (CRITICAL)
+
+Reorganize system into canonical execution model:
+
+## FINAL ARCHITECTURE
+
+Node.js API (thin gateway)
+        ↓
+Rust Core (authoritative state machine)
+        ↓
+SMT (real sparse merkle tree with proofs)
+MMR (append-only log with hashes)
+        ↓
+IPFS (content-addressed storage, state-bound)
+        ↓
+ZK Layer (transaction validity proofs)
+
+RULE:
+- Node.js NEVER modifies state directly
+- Rust core is single source of truth
+
+---
+
+# 2. RUST CORE BECOMES AUTHORITATIVE ENGINE
+
+## Move logic into Rust:
+
+Create:
+
+/core-rust/src/
+  engine.rs
+  state.rs
+  smt.rs
+  mmr.rs
+  tx.rs
+  verifier.rs
+
+## Responsibilities:
+
+Rust must implement:
+
+- apply_transaction(tx) → StateTransition
+- validate_transaction(tx) → bool
+- compute_state_root(state) → hash
+- generate_log_entry(tx) → MMR node
+
+Node.js must call Rust via child_process or WASM bridge.
+
+---
+
+# 3. REAL SPARSE MERKLE TREE (REPLACE CURRENT SMT)
+
+Replace current SMT with full binary SMT:
+
+RULES:
+- 256-bit keyspace
+- full binary trie structure
+- default empty hash nodes
+- inclusion proof includes full sibling path
+
+Implement:
+
+function getProof(key):
+  return {
+    path: [sibling hashes],
+    directions: [0/1 bits],
+    leaf: value,
+    root: computed root
+  }
+
+function verifyProof(proof, root):
+  recompute root from leaf + path
+  return equality check
+
+---
+
+# 4. STATE-BOUND IPFS INTEGRATION
+
+Modify ipfs.js:
+
+RULES:
+- CID MUST be derived from canonical JSON hash
+- CID MUST match SMT leaf hash
+- reject mismatch transactions
+
+ENFORCEMENT:
+
+if (hash(data) != smt_leaf_hash):
+    throw ERROR_INVALID_STATE_BINDING
+
+---
+
+# 5. MMR LOG UPGRADE (TRANSPARENCY LOG MODEL)
+
+Upgrade mmr.js:
+
+RULES:
+- Each entry is cryptographically linked
+- Each log root is signed (log operator key)
+- No deletion or mutation allowed
+
+STRUCTURE:
+
+logEntry = {
+  index,
+  txHash,
+  prevRoot,
+  newRoot,
+  timestamp
+}
+
+---
+
+# 6. TRANSACTION MODEL (STRICT ENFORCEMENT)
+
+Replace tx.js with:
+
+Transaction MUST include:
+
+- fromDID
+- toDID
+- assetId
+- amount
+- nonce
+- timestamp
+- signature
+
+VALIDATION RULES:
+
+function validate(tx):
+  - verify signature
+  - check nonce uniqueness
+  - check ownership
+  - ensure balance sufficiency
+  - ensure deterministic hash match
+
+---
+
+# 7. ZK LAYER (MOVE FROM PLACEHOLDER TO PIPELINE)
+
+Replace zk/circuits/tx.circom with enforced constraint model:
+
+template TxVerify() {
+    signal input balance;
+    signal input amount;
+    signal input nonce;
+
+    signal output valid;
+
+    valid <== (balance >= amount);
+}
+
+ADD PIPELINE (Node.js):
+
+- generate witness
+- generate proof
+- verify proof before Rust execution
+
+RULE:
+NO ZK PROOF = REJECT TRANSACTION
+
+---
+
+# 8. FORMAL VERIFICATION (TLA+ ENHANCEMENT)
+
+Update spec/ndap.tla:
+
+ADD TRACEABILITY REQUIREMENTS:
+
+Mapping:
+
+Rust apply_transaction ↔ TLA+ Next
+Rust validate_tx ↔ ValidTx predicate
+Rust compute_state_root ↔ State invariant
+
+ADD INVARIANTS:
+
+NoDoubleSpend ==
+  ∀ tx1, tx2:
+    if tx1.nonce = tx2.nonce then tx1 = tx2
+
+StateConsistency ==
+  hash(RustState) = SMT.root
+
+LogMonotonic ==
+  MMR[i+1].root > MMR[i].root
+
+---
+
+# 9. API GATEWAY REWRITE (NODE.JS)
+
+Node.js becomes ONLY:
+
+- request validation
+- forwarding to Rust core
+- returning results
+
+ENDPOINT FLOW:
+
+POST /data:
+  → canonicalize JSON
+  → send to Rust engine
+  → receive state update
+  → store CID in IPFS
+  → return proof bundle
+
+POST /transfer:
+  → send tx to Rust
+  → Rust validates + executes
+  → return new root + log entry
+
+POST /verify:
+  → call SMT verifier only
+
+GET /log:
+  → return MMR from Rust
+
+---
+
+# 10. SECURITY MODEL (ENTERPRISE REQUIREMENT)
+
+ADD SECURITY GUARANTEES:
+
+- deterministic execution
+- no mutable shared state in Node.js
+- cryptographic proof required for every state change
+- replay attack protection via nonce tracking
+- signature domain separation per transaction type
+
+---
+
+# 11. TESTING REQUIREMENTS (MANDATORY)
+
+Create:
+
+/tests/
+
+Add:
+
+- SMT inclusion/exclusion tests
+- transaction replay tests
+- Rust state reconstruction test
+- IPFS hash binding test
+- ZK verification test
+
+RUN:
+
+npm test
+cargo test
+
+---
+
+# 12. PERFORMANCE BENCHMARKING
+
+Create:
+
+/benchmarks/
+
+Measure:
+
+- tx validation time
+- SMT proof generation time
+- ZK proof time (simulated if needed)
+- state root recomputation time
+
+---
+
+# 13. FINAL BUILD RULE
+
+System is ONLY valid if:
+
+- Rust state root == SMT root
+- all transactions have valid ZK proof OR are rejected
+- IPFS CID matches canonical hash
+- MMR log is append-only and monotonic
+- TLA+ invariants are satisfied conceptually
+
+---
+
+# 14. START COMMANDS
+
+Run system with:
+
+cd core-rust && cargo build
+cd ..
+node index.js
+
+PRINT ON START:
+
+"NDAP ENTERPRISE CORE ACTIVE"
+
+---
+
+# END OF INSTRUCTIONS
